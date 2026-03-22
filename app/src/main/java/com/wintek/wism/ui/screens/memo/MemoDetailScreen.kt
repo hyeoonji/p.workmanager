@@ -66,17 +66,48 @@ import com.wintek.wism.ui.theme.TextOnPrimary
 import com.wintek.wism.ui.theme.TextSecondary
 import com.wintek.wism.ui.theme.Urgent
 import com.wintek.wism.ui.theme.WismTheme
+import com.wintek.wism.viewmodel.PostViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MemoDetailScreen(
     postId: Int,
     onBack: () -> Unit = {},
-    onEdit: () -> Unit = {}
+    onEdit: () -> Unit = {},
+    viewModel: PostViewModel = hiltViewModel()
 ) {
-    // TODO: ViewModel 연동. 지금은 프리뷰용 더미 데이터
-    val post = previewDetailPost()
+    val detailState by viewModel.detailState.collectAsState()
     var commentText by remember { mutableStateOf("") }
+    var showMenu by remember { mutableStateOf(false) }
+
+    LaunchedEffect(postId) {
+        viewModel.loadPostDetail(postId)
+    }
+
+    val post = detailState.post
+
+    if (detailState.isLoading || post == null) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {},
+                    navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, "뒤로") } },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Background)
+                )
+            }
+        ) { padding ->
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = Primary)
+            }
+        }
+        return
+    }
 
     Scaffold(
         topBar = {
@@ -88,8 +119,22 @@ fun MemoDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO: 수정/삭제 메뉴 */ }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "더보기")
+                    if (post.isMine) {
+                        Box {
+                            IconButton(onClick = { showMenu = true }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "더보기")
+                            }
+                            DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                                DropdownMenuItem(
+                                    text = { Text("수정") },
+                                    onClick = { showMenu = false; onEdit() }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("삭제", color = com.wintek.wism.ui.theme.Destructive) },
+                                    onClick = { showMenu = false; viewModel.deletePost(postId); onBack() }
+                                )
+                            }
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Background)
@@ -176,7 +221,7 @@ fun MemoDetailScreen(
 
                 // 확인 완료 버튼
                 OutlinedButton(
-                    onClick = { /* TODO: markAsRead */ },
+                    onClick = { viewModel.markAsRead(postId) },
                     shape = RoundedCornerShape(10.dp)
                 ) {
                     Icon(Icons.Default.CheckCircle, null, Modifier.size(16.dp))
@@ -218,7 +263,7 @@ fun MemoDetailScreen(
                     onValueChange = { commentText = it },
                     placeholder = { Text("댓글을 입력하세요...", color = TextSecondary) },
                     modifier = Modifier.weight(1f),
-                    singleLine = true,
+                    maxLines = 1,
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedContainerColor = InputBackground,
@@ -226,7 +271,7 @@ fun MemoDetailScreen(
                     )
                 )
                 IconButton(
-                    onClick = { /* TODO: 댓글 전송 */ commentText = "" },
+                    onClick = { viewModel.addComment(postId, commentText); commentText = "" },
                     enabled = commentText.isNotBlank()
                 ) {
                     Icon(Icons.Default.Send, contentDescription = "전송", tint = if (commentText.isNotBlank()) Primary else TextSecondary)
