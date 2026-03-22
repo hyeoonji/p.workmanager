@@ -33,16 +33,29 @@ interface PostDao {
         SELECT * FROM wism_posts
         WHERE is_deleted = 0
             AND (:category IS NULL OR category = :category)
-            AND (:priority IS NULL OR priority = :priority)
             AND (:search IS NULL OR title LIKE '%' || :search || '%' OR content LIKE '%' || :search || '%')
         ORDER BY
             CASE WHEN priority = 'urgent' THEN 0 ELSE 1 END,
             created_at DESC
         LIMIT :limit OFFSET :offset
     """)
-    suspend fun getFilteredPosts(
+    suspend fun getFilteredPostsByPriority(
         category: String? = null,
-        priority: String? = null,
+        search: String? = null,
+        limit: Int = 20,
+        offset: Int = 0
+    ): List<PostEntity>
+
+    @Query("""
+        SELECT * FROM wism_posts
+        WHERE is_deleted = 0
+            AND (:category IS NULL OR category = :category)
+            AND (:search IS NULL OR title LIKE '%' || :search || '%' OR content LIKE '%' || :search || '%')
+        ORDER BY created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    suspend fun getFilteredPostsByDate(
+        category: String? = null,
         search: String? = null,
         limit: Int = 20,
         offset: Int = 0

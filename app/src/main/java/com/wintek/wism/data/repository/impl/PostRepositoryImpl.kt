@@ -28,25 +28,30 @@ class PostRepositoryImpl @Inject constructor(
     private val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
     override suspend fun getPosts(
+        currentUserId: Int,
         category: String?,
-        priority: String?,
         search: String?,
+        sortByPriority: Boolean,
         page: Int,
         limit: Int
     ): List<Post> {
         val offset = (page - 1) * limit
-        val entities = postDao.getFilteredPosts(category, priority, search, limit, offset)
-        return entities.map { it.toPost() }
+        val entities = if (sortByPriority) {
+            postDao.getFilteredPostsByPriority(category, search, limit, offset)
+        } else {
+            postDao.getFilteredPostsByDate(category, search, limit, offset)
+        }
+        return entities.map { it.toPost(currentUserId) }
     }
 
     override suspend fun getMyPosts(userId: Int): List<Post> {
-        return postDao.getByUserId(userId).map { it.toPost() }
+        return postDao.getByUserId(userId).map { it.toPost(userId) }
     }
 
     override suspend fun getBookmarkedPosts(userId: Int): List<Post> {
         val bookmarkedIds = bookmarkDao.getBookmarkedPostIds(userId)
         return bookmarkedIds.mapNotNull { postId ->
-            postDao.getById(postId)?.toPost(currentUserId = userId)
+            postDao.getById(postId)?.toPost(userId)
         }
     }
 
@@ -57,10 +62,7 @@ class PostRepositoryImpl @Inject constructor(
             val commentUser = userDao.getById(comment.userId)
             Comment(
                 id = comment.id,
-                author = Author(
-                    id = comment.userId,
-                    name = commentUser?.name ?: "알 수 없음"
-                ),
+                author = Author(id = comment.userId, name = commentUser?.name ?: "알 수 없음"),
                 content = comment.content,
                 type = comment.type,
                 createdAt = comment.createdAt
@@ -149,7 +151,6 @@ class PostRepositoryImpl @Inject constructor(
         if (!readReceiptDao.isRead(userId, postId)) {
             val now = LocalDateTime.now().format(fmt)
             readReceiptDao.insert(ReadReceiptEntity(userId, postId, now))
-            // Add status comment
             commentDao.insert(
                 CommentEntity(
                     postId = postId, userId = userId, content = "확인 완료",
@@ -167,8 +168,8 @@ class PostRepositoryImpl @Inject constructor(
             urgentCount = postDao.getUrgentCount(),
             todayCount = postDao.getTodayCount(today),
             myMemoCount = postDao.countByUserId(userId),
-            urgentMemos = urgentPosts.map { it.toPost() },
-            todayMemos = todayPosts.map { it.toPost() }
+            urgentMemos = urgentPosts.map { it.toPost(userId) },
+            todayMemos = todayPosts.map { it.toPost(userId) }
         )
     }
 

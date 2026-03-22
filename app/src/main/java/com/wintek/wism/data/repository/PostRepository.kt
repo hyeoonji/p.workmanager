@@ -6,9 +6,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface PostRepository {
     suspend fun getPosts(
+        currentUserId: Int,
         category: String? = null,
-        priority: String? = null,
         search: String? = null,
+        sortByPriority: Boolean = true,
         page: Int = 1,
         limit: Int = 20
     ): List<Post>

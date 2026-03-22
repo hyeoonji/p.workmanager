@@ -4,10 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wintek.wism.data.model.Post
 import com.wintek.wism.data.repository.AuthRepository
+import com.wintek.wism.data.repository.CommentRepository
 import com.wintek.wism.data.repository.PostRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -17,7 +20,7 @@ data class PostListState(
     val posts: List<Post> = emptyList(),
     val searchQuery: String = "",
     val selectedCategory: String? = null,
-    val selectedPriority: String? = null
+    val sortByPriority: Boolean = true
 )
 
 data class PostDetailState(
@@ -25,9 +28,15 @@ data class PostDetailState(
     val post: Post? = null
 )
 
+sealed class PostEvent {
+    object Saved : PostEvent()
+    object Deleted : PostEvent()
+}
+
 @HiltViewModel
 class PostViewModel @Inject constructor(
     private val postRepository: PostRepository,
+    private val commentRepository: CommentRepository,
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
@@ -37,20 +46,43 @@ class PostViewModel @Inject constructor(
     private val _detailState = MutableStateFlow(PostDetailState())
     val detailState: StateFlow<PostDetailState> = _detailState.asStateFlow()
 
-    fun loadPosts(category: String? = null, priority: String? = null, search: String? = null) {
+    private val _event = MutableSharedFlow<PostEvent>()
+    val event = _event.asSharedFlow()
+
+    private var currentMode: ListMode = ListMode.All
+
+    private sealed class ListMode {
+        object All : ListMode()
+        object My : ListMode()
+        object Bookmarks : ListMode()
+    }
+
+    fun loadPosts(
+        category: String? = null,
+        search: String? = null,
+        sortByPriority: Boolean = true
+    ) {
+        currentMode = ListMode.All
         viewModelScope.launch {
             _listState.value = _listState.value.copy(
                 isLoading = true,
                 selectedCategory = category,
-                selectedPriority = priority,
+                sortByPriority = sortByPriority,
                 searchQuery = search ?: ""
             )
-            val posts = postRepository.getPosts(category = category, priority = priority, search = search)
+            val userId = authRepository.getCurrentUserId() ?: return@launch
+            val posts = postRepository.getPosts(
+                currentUserId = userId,
+                category = category,
+                search = search,
+                sortByPriority = sortByPriority
+            )
             _listState.value = _listState.value.copy(isLoading = false, posts = posts)
         }
     }
 
     fun loadMyPosts() {
+        currentMode = ListMode.My
         viewModelScope.launch {
             _listState.value = _listState.value.copy(isLoading = true)
             val userId = authRepository.getCurrentUserId() ?: return@launch
@@ -60,6 +92,7 @@ class PostViewModel @Inject constructor(
     }
 
     fun loadBookmarkedPosts() {
+        currentMode = ListMode.Bookmarks
         viewModelScope.launch {
             _listState.value = _listState.value.copy(isLoading = true)
             val userId = authRepository.getCurrentUserId() ?: return@launch
@@ -81,6 +114,7 @@ class PostViewModel @Inject constructor(
         viewModelScope.launch {
             val userId = authRepository.getCurrentUserId() ?: return@launch
             postRepository.toggleBookmark(userId, postId)
+            reloadCurrentList()
         }
     }
 
@@ -88,6 +122,15 @@ class PostViewModel @Inject constructor(
         viewModelScope.launch {
             val userId = authRepository.getCurrentUserId() ?: return@launch
             postRepository.markAsRead(userId, postId)
+            loadPostDetail(postId)
+        }
+    }
+
+    fun addComment(postId: Int, content: String) {
+        viewModelScope.launch {
+            val userId = authRepository.getCurrentUserId() ?: return@launch
+            commentRepository.addComment(postId, userId, content)
+            loadPostDetail(postId)
         }
     }
 
@@ -95,18 +138,30 @@ class PostViewModel @Inject constructor(
         viewModelScope.launch {
             val userId = authRepository.getCurrentUserId() ?: return@launch
             postRepository.createPost(userId, title, content, category, priority, project, tags)
+            _event.emit(PostEvent.Saved)
         }
     }
 
     fun updatePost(postId: Int, title: String, content: String, category: String, priority: String, project: String?, tags: List<String>) {
         viewModelScope.launch {
             postRepository.updatePost(postId, title, content, category, priority, project, tags)
+            _event.emit(PostEvent.Saved)
         }
     }
 
     fun deletePost(postId: Int) {
         viewModelScope.launch {
             postRepository.deletePost(postId)
+            _event.emit(PostEvent.Deleted)
+        }
+    }
+
+    private fun reloadCurrentList() {
+        val state = _listState.value
+        when (currentMode) {
+            ListMode.All -> loadPosts(state.selectedCategory, state.searchQuery, state.sortByPriority)
+            ListMode.My -> loadMyPosts()
+            ListMode.Bookmarks -> loadBookmarkedPosts()
         }
     }
 }
