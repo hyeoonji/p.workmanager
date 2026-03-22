@@ -35,7 +35,5 @@ fun BookmarksScreen(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun BookmarksScreenPreview() {
-    WismTheme {
-        BookmarksScreen()
-    }
+    WismTheme { BookmarksScreen() }
 }

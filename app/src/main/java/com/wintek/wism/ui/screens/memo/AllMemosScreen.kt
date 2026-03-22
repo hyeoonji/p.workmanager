@@ -28,9 +28,9 @@ fun AllMemosScreen(
         posts = state.posts,
         onPostClick = onPostClick,
         onToggleBookmark = { viewModel.toggleBookmark(it) },
-        onSearch = { viewModel.loadPosts(search = it) },
-        onCategoryFilter = { viewModel.loadPosts(category = it, priority = state.selectedPriority, search = state.searchQuery) },
-        onPriorityFilter = { viewModel.loadPosts(category = state.selectedCategory, priority = it, search = state.searchQuery) },
+        onSearch = { viewModel.loadPosts(category = state.selectedCategory, search = it, sortByPriority = state.sortByPriority) },
+        onCategoryFilter = { viewModel.loadPosts(category = it, search = state.searchQuery, sortByPriority = state.sortByPriority) },
+        onSortChanged = { viewModel.loadPosts(category = state.selectedCategory, search = state.searchQuery, sortByPriority = it) },
         emptyMessage = "메모가 없습니다"
     )
 }
@@ -38,7 +38,5 @@ fun AllMemosScreen(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun AllMemosScreenPreview() {
-    WismTheme {
-        AllMemosScreen()
-    }
+    WismTheme { AllMemosScreen() }
 }

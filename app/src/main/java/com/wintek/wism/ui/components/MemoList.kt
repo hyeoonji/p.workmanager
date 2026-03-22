@@ -21,6 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
@@ -55,14 +56,14 @@ fun MemoList(
     onToggleBookmark: (Int) -> Unit,
     onSearch: (String) -> Unit = {},
     onCategoryFilter: (String?) -> Unit = {},
-    onPriorityFilter: (String?) -> Unit = {},
+    onSortChanged: (Boolean) -> Unit = {},  // true = 우선순위순, false = 최신순
     emptyMessage: String = "메모가 없습니다"
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<String?>(null) }
-    var selectedPriority by remember { mutableStateOf<String?>(null) }
+    var sortByPriority by remember { mutableStateOf(true) }
 
-    val hasFilter = selectedCategory != null || selectedPriority != null
+    val hasFilter = selectedCategory != null
 
     Column(modifier = modifier.fillMaxSize()) {
         // 검색바
@@ -78,7 +79,7 @@ fun MemoList(
             },
             trailingIcon = {
                 if (searchQuery.isNotEmpty()) {
-                    androidx.compose.material3.IconButton(onClick = {
+                    IconButton(onClick = {
                         searchQuery = ""
                         onSearch("")
                     }) {
@@ -89,7 +90,7 @@ fun MemoList(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            singleLine = true,
+            maxLines = 1,
             shape = RoundedCornerShape(10.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedContainerColor = InputBackground,
@@ -117,15 +118,15 @@ fun MemoList(
                 }
             )
 
-            // 우선순위 필터
+            // 정렬 순서
             FilterDropdown(
                 modifier = Modifier.weight(1f),
-                label = selectedPriority?.let { Priority.fromValue(it).label } ?: "우선순위",
-                options = Priority.entries.map { it.value to it.label },
-                selectedValue = selectedPriority,
+                label = if (sortByPriority) "우선순위순" else "최신순",
+                options = listOf("priority" to "우선순위순", "date" to "최신순"),
+                selectedValue = if (sortByPriority) "priority" else "date",
                 onSelect = {
-                    selectedPriority = it
-                    onPriorityFilter(it)
+                    sortByPriority = it == "priority"
+                    onSortChanged(sortByPriority)
                 }
             )
 
@@ -133,9 +134,7 @@ fun MemoList(
             if (hasFilter) {
                 TextButton(onClick = {
                     selectedCategory = null
-                    selectedPriority = null
                     onCategoryFilter(null)
-                    onPriorityFilter(null)
                 }) {
                     Text("초기화", style = MaterialTheme.typography.labelSmall, color = Primary)
                 }
@@ -232,8 +231,6 @@ private fun FilterDropdown(
         }
     }
 }
-
-// ── Preview ──
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

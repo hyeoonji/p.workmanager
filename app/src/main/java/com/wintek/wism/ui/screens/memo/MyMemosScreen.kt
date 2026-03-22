@@ -28,6 +28,10 @@ fun MyMemosScreen(
         posts = state.posts,
         onPostClick = onPostClick,
         onToggleBookmark = { viewModel.toggleBookmark(it) },
+        onSearch = { query ->
+            // 클라이언트 필터링은 ViewModel에서 처리하지 않고 리로드
+            viewModel.loadMyPosts()
+        },
         emptyMessage = "작성한 메모가 없습니다"
     )
 }
@@ -35,7 +39,5 @@ fun MyMemosScreen(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun MyMemosScreenPreview() {
-    WismTheme {
-        MyMemosScreen()
-    }
+    WismTheme { MyMemosScreen() }
 }
