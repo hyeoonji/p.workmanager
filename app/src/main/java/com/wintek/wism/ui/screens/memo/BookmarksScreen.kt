@@ -1,25 +1,38 @@
 package com.wintek.wism.ui.screens.memo
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.wintek.wism.ui.components.MemoList
 import com.wintek.wism.ui.theme.WismTheme
+import com.wintek.wism.viewmodel.PostViewModel
 
 @Composable
 fun BookmarksScreen(
     modifier: Modifier = Modifier,
-    onPostClick: (Int) -> Unit = {}
+    onPostClick: (Int) -> Unit = {},
+    viewModel: PostViewModel = hiltViewModel()
 ) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("북마크 (P-05)")
+    val state by viewModel.listState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadBookmarkedPosts()
     }
+
+    MemoList(
+        modifier = modifier,
+        posts = state.posts,
+        onPostClick = onPostClick,
+        onToggleBookmark = { viewModel.toggleBookmark(it) },
+        emptyMessage = "북마크된 메모가 없습니다"
+    )
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun BookmarksScreenPreview() {
     WismTheme {
