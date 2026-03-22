@@ -10,19 +10,19 @@ object SeedData {
     private val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
     fun users(): List<UserEntity> = listOf(
-        UserEntity(id = 1, loginId = "kim.team", password = "test1234", name = "김팀장",
+        UserEntity(id = 1, loginId = "10201", password = "test1234", name = "김팀장",
             department = "XR개발실 1팀", position = "팀장", email = "kim@wintek.co.kr",
             phone = "010-1111-1111", role = "manager", createdAt = ts(-30), updatedAt = ts(-30)),
-        UserEntity(id = 2, loginId = "park.team", password = "test1234", name = "박팀장",
+        UserEntity(id = 2, loginId = "10302", password = "test1234", name = "박팀장",
             department = "XR개발실 2팀", position = "팀장", email = "park@wintek.co.kr",
             phone = "010-2222-2222", role = "manager", createdAt = ts(-30), updatedAt = ts(-30)),
-        UserEntity(id = 3, loginId = "lee.team", password = "test1234", name = "이팀장",
+        UserEntity(id = 3, loginId = "10403", password = "test1234", name = "이팀장",
             department = "XR개발실 3팀", position = "팀장", email = "lee@wintek.co.kr",
             phone = "010-3333-3333", role = "manager", createdAt = ts(-30), updatedAt = ts(-30)),
-        UserEntity(id = 4, loginId = "choi.dir", password = "test1234", name = "최이사",
+        UserEntity(id = 4, loginId = "20101", password = "test1234", name = "최이사",
             department = "경영지원실", position = "이사", email = "choi@wintek.co.kr",
             phone = "010-4444-4444", role = "admin", createdAt = ts(-30), updatedAt = ts(-30)),
-        UserEntity(id = 5, loginId = "shin.team", password = "test1234", name = "신팀장",
+        UserEntity(id = 5, loginId = "10504", password = "test1234", name = "신팀장",
             department = "XR개발실 3팀", position = "대리", email = "shin@wintek.co.kr",
             phone = "010-5555-5555", role = "manager", createdAt = ts(-30), updatedAt = ts(-30))
     )
