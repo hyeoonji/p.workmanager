@@ -49,13 +49,19 @@ import com.wintek.wism.ui.theme.Surface
 import com.wintek.wism.ui.theme.TextOnPrimary
 import com.wintek.wism.ui.theme.TextSecondary
 import com.wintek.wism.ui.theme.WismTheme
+import com.wintek.wism.viewmodel.PostEvent
+import com.wintek.wism.viewmodel.PostViewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WriteMemoScreen(
     postId: Int? = null,
     onBack: () -> Unit = {},
-    onSaved: () -> Unit = {}
+    onSaved: () -> Unit = {},
+    viewModel: PostViewModel = hiltViewModel()
 ) {
     val isEdit = postId != null
     var title by remember { mutableStateOf("") }
@@ -65,6 +71,31 @@ fun WriteMemoScreen(
     var project by remember { mutableStateOf("") }
     var tagInput by remember { mutableStateOf("") }
     var tags by remember { mutableStateOf(listOf<String>()) }
+
+    // 수정 모드: 기존 데이터 로드
+    val detailState by viewModel.detailState.collectAsState()
+    LaunchedEffect(postId) {
+        if (postId != null) viewModel.loadPostDetail(postId)
+    }
+    LaunchedEffect(detailState.post) {
+        detailState.post?.let { post ->
+            if (isEdit) {
+                title = post.title
+                content = post.content
+                selectedPriority = post.priority
+                selectedCategory = post.category
+                project = post.project ?: ""
+                tags = post.tags
+            }
+        }
+    }
+
+    // 저장 완료 이벤트
+    LaunchedEffect(Unit) {
+        viewModel.event.collect { event ->
+            if (event is PostEvent.Saved) onSaved()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -94,7 +125,7 @@ fun WriteMemoScreen(
                 onValueChange = { title = it },
                 placeholder = { Text("메모 제목을 입력하세요", color = TextSecondary) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
+                maxLines = 1,
                 shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = InputBackground,
@@ -127,7 +158,7 @@ fun WriteMemoScreen(
                 onValueChange = { project = it },
                 placeholder = { Text("관련 프로젝트명", color = TextSecondary) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
+                maxLines = 1,
                 shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = InputBackground,
@@ -157,7 +188,7 @@ fun WriteMemoScreen(
                     onValueChange = { tagInput = it },
                     placeholder = { Text("담당자명", color = TextSecondary) },
                     modifier = Modifier.weight(1f),
-                    singleLine = true,
+                    maxLines = 1,
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedContainerColor = InputBackground,
@@ -198,7 +229,13 @@ fun WriteMemoScreen(
                     shape = RoundedCornerShape(10.dp)
                 ) { Text("취소") }
                 Button(
-                    onClick = { /* TODO: 저장 */ onSaved() },
+                    onClick = {
+                        if (isEdit && postId != null) {
+                            viewModel.updatePost(postId, title, content, selectedCategory.value, selectedPriority.value, project.ifBlank { null }, tags)
+                        } else {
+                            viewModel.createPost(title, content, selectedCategory.value, selectedPriority.value, project.ifBlank { null }, tags)
+                        }
+                    },
                     modifier = Modifier.weight(1f),
                     enabled = title.isNotBlank(),
                     shape = RoundedCornerShape(10.dp),
