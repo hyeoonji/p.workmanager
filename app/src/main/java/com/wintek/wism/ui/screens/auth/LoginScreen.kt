@@ -65,7 +65,7 @@ fun LoginScreen(
             onValueChange = { loginId = it },
             label = { Text("아이디") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
+            maxLines = 1,
             shape = RoundedCornerShape(10.dp)
         )
         Spacer(modifier = Modifier.height(12.dp))
@@ -75,7 +75,7 @@ fun LoginScreen(
             onValueChange = { password = it },
             label = { Text("비밀번호") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
+            maxLines = 1,
             visualTransformation = PasswordVisualTransformation(),
             shape = RoundedCornerShape(10.dp)
         )

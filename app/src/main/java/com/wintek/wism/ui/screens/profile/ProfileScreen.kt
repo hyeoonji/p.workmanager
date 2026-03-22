@@ -59,13 +59,15 @@ import com.wintek.wism.ui.theme.Surface
 import com.wintek.wism.ui.theme.TextOnPrimary
 import com.wintek.wism.ui.theme.TextSecondary
 import com.wintek.wism.ui.theme.WismTheme
+import com.wintek.wism.viewmodel.AuthViewModel
 import com.wintek.wism.viewmodel.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
     onLogout: () -> Unit = {},
-    viewModel: ProfileViewModel = hiltViewModel()
+    viewModel: ProfileViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -75,7 +77,10 @@ fun ProfileScreen(
         ProfileContent(
             modifier = modifier,
             profile = profile,
-            onLogout = onLogout,
+            onLogout = {
+                authViewModel.logout()
+                onLogout()
+            },
             onPushToggle = { viewModel.updatePushEnabled(it) }
         )
     }

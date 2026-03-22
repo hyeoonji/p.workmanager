@@ -53,7 +53,7 @@ fun WismNavGraph(navController: NavHostController) {
                 },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(0) { inclusive = true }
+                        popUpTo(Screen.Splash.route) { inclusive = true }
                     }
                 }
             )
