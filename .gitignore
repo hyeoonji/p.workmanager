@@ -1,0 +1,39 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+
+# Gradle files
+.gradle/
+build/
+/captures
+
+# Local configuration file
+local.properties
+
+# Android Studio
+.idea/
+*.iml
+*.hprof
+
+# Mac
+.DS_Store
+
+# Native
+.externalNativeBuild/
+.cxx/
+
+# Claude Code
+.claude/
