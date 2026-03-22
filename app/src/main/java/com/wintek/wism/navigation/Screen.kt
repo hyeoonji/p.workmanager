@@ -16,4 +16,5 @@ sealed class Screen(val route: String) {
     object MemoDetail : Screen("memo_detail/{postId}") {
         fun createRoute(postId: Int) = "memo_detail/$postId"
     }
+    object Calendar : Screen("calendar")
 }

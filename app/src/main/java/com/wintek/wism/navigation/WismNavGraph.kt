@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.wintek.wism.ui.screens.MainScreen
 import com.wintek.wism.ui.screens.auth.LoginScreen
+import com.wintek.wism.ui.screens.calendar.CalendarScreen
 import com.wintek.wism.ui.screens.memo.MemoDetailScreen
 import com.wintek.wism.ui.screens.memo.WriteMemoScreen
 import com.wintek.wism.ui.screens.splash.SplashScreen
@@ -51,10 +52,22 @@ fun WismNavGraph(navController: NavHostController) {
                 onNavigateToWrite = { postId ->
                     navController.navigate(Screen.WriteMemo.createRoute(postId))
                 },
+                onNavigateToCalendar = {
+                    navController.navigate(Screen.Calendar.route)
+                },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
+                }
+            )
+        }
+
+        composable(Screen.Calendar.route) {
+            CalendarScreen(
+                onBack = { navController.popBackStack() },
+                onPostClick = { postId ->
+                    navController.navigate(Screen.MemoDetail.createRoute(postId))
                 }
             )
         }

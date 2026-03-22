@@ -46,6 +46,7 @@ import com.wintek.wism.viewmodel.NotificationViewModel
 fun MainScreen(
     onNavigateToDetail: (Int) -> Unit,
     onNavigateToWrite: (Int?) -> Unit,
+    onNavigateToCalendar: () -> Unit = {},
     onLogout: () -> Unit
 ) {
     var currentTab by remember { mutableStateOf(BottomNavItem.HOME) }
@@ -104,7 +105,8 @@ fun MainScreen(
             when (currentTab) {
                 BottomNavItem.HOME -> DashboardScreen(
                     modifier = modifier,
-                    onPostClick = onNavigateToDetail
+                    onPostClick = onNavigateToDetail,
+                    onCalendarClick = onNavigateToCalendar
                 )
                 BottomNavItem.ALL_MEMOS -> AllMemosScreen(
                     modifier = modifier,

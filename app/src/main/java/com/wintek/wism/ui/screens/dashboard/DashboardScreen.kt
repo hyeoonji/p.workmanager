@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Card
@@ -53,6 +54,7 @@ import com.wintek.wism.ui.theme.CategoryOther
 import com.wintek.wism.ui.theme.CategorySchedule
 import com.wintek.wism.ui.theme.TextSecondary
 import com.wintek.wism.ui.theme.Primary
+import com.wintek.wism.ui.theme.PrimaryLight
 import com.wintek.wism.ui.theme.Surface
 import com.wintek.wism.ui.theme.Urgent
 import com.wintek.wism.ui.theme.UrgentBorder
@@ -64,6 +66,7 @@ import com.wintek.wism.viewmodel.DashboardViewModel
 fun DashboardScreen(
     modifier: Modifier = Modifier,
     onPostClick: (Int) -> Unit = {},
+    onCalendarClick: () -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -79,6 +82,7 @@ fun DashboardScreen(
         myMemoCount = state.data.myMemoCount,
         urgentMemos = state.data.urgentMemos,
         todayMemos = state.data.todayMemos,
+        onCalendarClick = onCalendarClick,
         onPostClick = onPostClick
     )
 }
@@ -91,7 +95,8 @@ private fun DashboardContent(
     myMemoCount: Int = 0,
     urgentMemos: List<Post> = emptyList(),
     todayMemos: List<Post> = emptyList(),
-    onPostClick: (Int) -> Unit = {}
+    onPostClick: (Int) -> Unit = {},
+    onCalendarClick: () -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -136,6 +141,39 @@ private fun DashboardContent(
                     color = TextSecondary,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
                     textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        // 캘린더 바로가기
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onCalendarClick),
+            colors = CardDefaults.cardColors(containerColor = PrimaryLight),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    Icons.Default.CalendarToday,
+                    contentDescription = null,
+                    tint = Primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("캘린더 보기", style = MaterialTheme.typography.titleMedium, color = Primary)
+                    Text("전체 일정을 달력으로 확인하세요", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                }
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = Primary
                 )
             }
         }
