@@ -6,14 +6,14 @@ import androidx.compose.runtime.Composable
 
 private val WismColorScheme = lightColorScheme(
     primary = Primary,
-    onPrimary = Background,
+    onPrimary = TextOnPrimary,
     primaryContainer = PrimaryLight,
     secondary = Primary,
     background = Background,
     surface = Background,
     surfaceVariant = Surface,
-    onBackground = OnSurface,
-    onSurface = OnSurface,
+    onBackground = TextPrimary,
+    onSurface = TextPrimary,
     outline = Border,
     error = Destructive
 )

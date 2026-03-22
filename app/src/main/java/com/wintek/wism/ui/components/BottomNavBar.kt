@@ -15,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import com.wintek.wism.ui.theme.WismTheme
-import com.wintek.wism.ui.theme.MutedText
+import com.wintek.wism.ui.theme.TextSecondary
 import com.wintek.wism.ui.theme.Primary
 
 enum class BottomNavItem(
@@ -36,7 +36,7 @@ fun WismBottomNavBar(
     onItemSelected: (BottomNavItem) -> Unit
 ) {
     NavigationBar(
-        containerColor = androidx.compose.ui.graphics.Color.White
+        containerColor = com.wintek.wism.ui.theme.Background
     ) {
         BottomNavItem.entries.forEach { item ->
             val selected = currentRoute == item.route
@@ -48,8 +48,8 @@ fun WismBottomNavBar(
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Primary,
                     selectedTextColor = Primary,
-                    unselectedIconColor = MutedText,
-                    unselectedTextColor = MutedText,
+                    unselectedIconColor = TextSecondary,
+                    unselectedTextColor = TextSecondary,
                     indicatorColor = Primary.copy(alpha = 0.1f)
                 )
             )

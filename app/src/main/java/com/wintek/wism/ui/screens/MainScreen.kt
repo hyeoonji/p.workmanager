@@ -31,7 +31,9 @@ import com.wintek.wism.ui.screens.memo.AllMemosScreen
 import com.wintek.wism.ui.screens.memo.BookmarksScreen
 import com.wintek.wism.ui.screens.memo.MyMemosScreen
 import com.wintek.wism.ui.screens.profile.ProfileScreen
+import com.wintek.wism.ui.theme.Background
 import com.wintek.wism.ui.theme.Primary
+import com.wintek.wism.ui.theme.TextOnPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +50,7 @@ fun MainScreen(
             TopAppBar(
                 title = { Text(currentTab.label) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
+                    containerColor = Background
                 ),
                 actions = {
                     IconButton(onClick = { showNotificationPanel = true }) {
@@ -74,7 +76,7 @@ fun MainScreen(
             FloatingActionButton(
                 onClick = { onNavigateToWrite(null) },
                 containerColor = Primary,
-                contentColor = Color.White,
+                contentColor = TextOnPrimary,
                 shape = CircleShape
             ) {
                 Icon(Icons.Default.Edit, contentDescription = "글쓰기")

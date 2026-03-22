@@ -54,7 +54,7 @@ fun SplashScreen(
         Text(
             text = "Wintek Insight System Manager",
             style = MaterialTheme.typography.bodyMedium,
-            color = com.wintek.wism.ui.theme.MutedText
+            color = com.wintek.wism.ui.theme.TextSecondary
         )
     }
 }

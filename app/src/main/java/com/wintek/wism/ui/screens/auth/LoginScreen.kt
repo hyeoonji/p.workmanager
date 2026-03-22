@@ -23,13 +23,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import com.wintek.wism.ui.theme.TextOnPrimary
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.tooling.preview.Preview
 import com.wintek.wism.ui.theme.Destructive
-import com.wintek.wism.ui.theme.MutedText
+import com.wintek.wism.ui.theme.TextSecondary
 import com.wintek.wism.ui.theme.Primary
 import com.wintek.wism.ui.theme.WismTheme
 import com.wintek.wism.viewmodel.AuthViewModel
@@ -57,7 +57,7 @@ fun LoginScreen(
     ) {
         Text("WISM", style = MaterialTheme.typography.headlineLarge, color = Primary)
         Spacer(modifier = Modifier.height(4.dp))
-        Text("Wintek Insight System Manager", style = MaterialTheme.typography.bodySmall, color = MutedText)
+        Text("Wintek Insight System Manager", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
         Spacer(modifier = Modifier.height(48.dp))
 
         OutlinedTextField(
@@ -101,7 +101,7 @@ fun LoginScreen(
             shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Primary)
         ) {
-            Text("로그인", color = Color.White)
+            Text("로그인", color = TextOnPrimary)
         }
     }
 }
