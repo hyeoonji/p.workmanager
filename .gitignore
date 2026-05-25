@@ -20,6 +20,9 @@ out/
 build/
 /captures
 
+# Release build outputs
+/app/release/
+
 # Local configuration file
 local.properties
 
