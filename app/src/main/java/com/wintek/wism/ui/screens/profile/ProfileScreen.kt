@@ -28,12 +28,18 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -53,6 +59,7 @@ import com.wintek.wism.data.model.UserProfile
 import com.wintek.wism.data.model.UserStats
 import com.wintek.wism.ui.theme.Background
 import com.wintek.wism.ui.theme.Destructive
+import com.wintek.wism.ui.theme.InputBackground
 import com.wintek.wism.ui.theme.Primary
 import com.wintek.wism.ui.theme.PrimaryLight
 import com.wintek.wism.ui.theme.Surface
@@ -81,7 +88,10 @@ fun ProfileScreen(
                 authViewModel.logout()
                 onLogout()
             },
-            onPushToggle = { viewModel.updatePushEnabled(it) }
+            onPushToggle = { viewModel.updatePushEnabled(it) },
+            onSaveProfile = { name, email, phone, department, position ->
+                viewModel.updateProfile(name, email, phone, department, position)
+            }
         )
     }
 }
@@ -91,9 +101,11 @@ private fun ProfileContent(
     modifier: Modifier = Modifier,
     profile: UserProfile,
     onLogout: () -> Unit = {},
-    onPushToggle: (Boolean) -> Unit = {}
+    onPushToggle: (Boolean) -> Unit = {},
+    onSaveProfile: (name: String, email: String?, phone: String?, department: String?, position: String?) -> Unit = { _, _, _, _, _ -> }
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
+    var showEditSheet by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -141,7 +153,7 @@ private fun ProfileContent(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
-                    onClick = { /* TODO: 프로필 수정 */ },
+                    onClick = { showEditSheet = true },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Primary)
@@ -243,6 +255,131 @@ private fun ProfileContent(
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) { Text("취소") }
             }
+        )
+    }
+
+    if (showEditSheet) {
+        ProfileEditSheet(
+            profile = profile,
+            onDismiss = { showEditSheet = false },
+            onSave = { name, email, phone, department, position ->
+                onSaveProfile(name, email, phone, department, position)
+                showEditSheet = false
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProfileEditSheet(
+    profile: UserProfile,
+    onDismiss: () -> Unit,
+    onSave: (name: String, email: String?, phone: String?, department: String?, position: String?) -> Unit
+) {
+    var name by remember { mutableStateOf(profile.name) }
+    var position by remember { mutableStateOf(profile.position ?: "") }
+    var department by remember { mutableStateOf(profile.department ?: "") }
+    var email by remember { mutableStateOf(profile.email ?: "") }
+    var phone by remember { mutableStateOf(profile.phone ?: "") }
+
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = Background
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                "프로필 수정",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+
+            // 아바타 (사진 변경은 추후 지원)
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(96.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryLight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = Primary.copy(alpha = 0.5f)
+                    )
+                }
+            }
+
+            EditField(label = "이름 *", value = name, onValueChange = { name = it }, placeholder = "이름을 입력하세요")
+            EditField(label = "직급", value = position, onValueChange = { position = it }, placeholder = "예: 팀장, 부장")
+            EditField(label = "부서", value = department, onValueChange = { department = it }, placeholder = "예: XR개발실 1팀")
+            EditField(label = "이메일", value = email, onValueChange = { email = it }, placeholder = "example@wintek.co.kr")
+            EditField(label = "전화번호", value = phone, onValueChange = { phone = it }, placeholder = "010-0000-0000")
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp)
+                ) { Text("취소") }
+                Button(
+                    onClick = {
+                        onSave(
+                            name.trim(),
+                            email.trim().ifBlank { null },
+                            phone.trim().ifBlank { null },
+                            department.trim().ifBlank { null },
+                            position.trim().ifBlank { null }
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = name.isNotBlank(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                ) { Text("저장", color = TextOnPrimary) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(label, style = MaterialTheme.typography.labelLarge)
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(placeholder, color = TextSecondary) },
+            modifier = Modifier.fillMaxWidth(),
+            maxLines = 1,
+            shape = RoundedCornerShape(10.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = InputBackground,
+                focusedContainerColor = InputBackground
+            )
         )
     }
 }
