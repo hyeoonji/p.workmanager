@@ -12,12 +12,13 @@ import com.wintek.wism.data.local.entity.*
         CommentEntity::class,
         TagEntity::class,
         PostTagCrossRef::class,
+        PostReferenceEntity::class,
         BookmarkEntity::class,
         ReadReceiptEntity::class,
         NotificationEntity::class,
         UserSettingsEntity::class
     ],
-    version = 1,
+    version = 3,
     exportSchema = true
 )
 abstract class WismDatabase : RoomDatabase() {
@@ -28,5 +29,6 @@ abstract class WismDatabase : RoomDatabase() {
     abstract fun readReceiptDao(): ReadReceiptDao
     abstract fun notificationDao(): NotificationDao
     abstract fun tagDao(): TagDao
+    abstract fun referenceDao(): ReferenceDao
     abstract fun userSettingsDao(): UserSettingsDao
 }

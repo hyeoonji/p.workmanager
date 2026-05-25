@@ -21,6 +21,12 @@ class UserRepositoryImpl @Inject constructor(
 
     private val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
+    override suspend fun getActiveUsers(): List<com.wintek.wism.data.model.Author> {
+        return userDao.getAllActive().map {
+            com.wintek.wism.data.model.Author(id = it.id, name = it.name, department = it.department, position = it.position)
+        }
+    }
+
     override suspend fun getUserProfile(userId: Int): UserProfile? {
         val user = userDao.getById(userId) ?: return null
         val settings = userSettingsDao.getByUserId(userId)

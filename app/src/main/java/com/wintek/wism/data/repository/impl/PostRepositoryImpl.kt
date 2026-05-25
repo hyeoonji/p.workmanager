@@ -4,6 +4,7 @@ import com.wintek.wism.data.local.dao.*
 import com.wintek.wism.data.local.entity.BookmarkEntity
 import com.wintek.wism.data.local.entity.CommentEntity
 import com.wintek.wism.data.local.entity.PostEntity
+import com.wintek.wism.data.local.entity.PostReferenceEntity
 import com.wintek.wism.data.local.entity.PostTagCrossRef
 import com.wintek.wism.data.local.entity.ReadReceiptEntity
 import com.wintek.wism.data.local.entity.TagEntity
@@ -22,7 +23,8 @@ class PostRepositoryImpl @Inject constructor(
     private val commentDao: CommentDao,
     private val bookmarkDao: BookmarkDao,
     private val readReceiptDao: ReadReceiptDao,
-    private val tagDao: TagDao
+    private val tagDao: TagDao,
+    private val referenceDao: ReferenceDao
 ) : PostRepository {
 
     private val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
@@ -65,10 +67,14 @@ class PostRepositoryImpl @Inject constructor(
                 author = Author(id = comment.userId, name = commentUser?.name ?: "알 수 없음"),
                 content = comment.content,
                 type = comment.type,
-                createdAt = comment.createdAt
+                createdAt = comment.createdAt,
+                isMine = comment.userId == currentUserId
             )
         }
         val tags = tagDao.getTagNamesByPostId(postId)
+        val references = referenceDao.getReferenceUsers(postId).map {
+            Author(id = it.id, name = it.name, department = it.department, position = it.position)
+        }
         val readBy = readReceiptDao.countByPostId(postId)
         val totalReaders = userDao.getActiveCount()
         val isRead = readReceiptDao.isRead(currentUserId, postId)
@@ -87,7 +93,9 @@ class PostRepositoryImpl @Inject constructor(
                 position = user?.position
             ),
             project = entity.project,
+            scheduledDate = entity.scheduledDate,
             tags = tags,
+            references = references,
             commentCount = comments.size,
             readBy = readBy,
             totalReaders = totalReaders,
@@ -102,34 +110,40 @@ class PostRepositoryImpl @Inject constructor(
 
     override suspend fun createPost(
         userId: Int, title: String, content: String,
-        category: String, priority: String, project: String?, tags: List<String>
+        category: String, priority: String, project: String?, scheduledDate: String?,
+        tags: List<String>, referenceIds: List<Int>
     ): Long {
         val now = LocalDateTime.now().format(fmt)
         val postId = postDao.insert(
             PostEntity(
                 userId = userId, title = title, content = content,
                 category = category, priority = priority, project = project,
+                scheduledDate = scheduledDate,
                 createdAt = now, updatedAt = now
             )
         )
         saveTags(postId.toInt(), tags)
+        saveReferences(postId.toInt(), referenceIds)
         return postId
     }
 
     override suspend fun updatePost(
         postId: Int, title: String, content: String,
-        category: String, priority: String, project: String?, tags: List<String>
+        category: String, priority: String, project: String?, scheduledDate: String?,
+        tags: List<String>, referenceIds: List<Int>
     ) {
         val existing = postDao.getById(postId) ?: return
         val now = LocalDateTime.now().format(fmt)
         postDao.update(
             existing.copy(
                 title = title, content = content, category = category,
-                priority = priority, project = project, updatedAt = now
+                priority = priority, project = project, scheduledDate = scheduledDate, updatedAt = now
             )
         )
         tagDao.deletePostTags(postId)
         saveTags(postId, tags)
+        referenceDao.deleteByPost(postId)
+        saveReferences(postId, referenceIds)
     }
 
     override suspend fun deletePost(postId: Int) {
@@ -185,6 +199,9 @@ class PostRepositoryImpl @Inject constructor(
         val readBy = readReceiptDao.countByPostId(id)
         val totalReaders = userDao.getActiveCount()
         val tags = tagDao.getTagNamesByPostId(id)
+        val references = referenceDao.getReferenceUsers(id).map {
+            Author(id = it.id, name = it.name, department = it.department, position = it.position)
+        }
         val isRead = currentUserId?.let { readReceiptDao.isRead(it, id) } ?: false
         val isBookmarked = currentUserId?.let { bookmarkDao.isBookmarked(it, id) } ?: false
 
@@ -193,7 +210,7 @@ class PostRepositoryImpl @Inject constructor(
             category = Category.fromValue(category),
             priority = Priority.fromValue(priority),
             author = Author(id = userId, name = user?.name ?: "알 수 없음", department = user?.department),
-            project = project, tags = tags, commentCount = commentCount,
+            project = project, scheduledDate = scheduledDate, tags = tags, references = references, commentCount = commentCount,
             readBy = readBy, totalReaders = totalReaders,
             isRead = isRead, isBookmarked = isBookmarked,
             isMine = currentUserId == userId,
@@ -209,6 +226,12 @@ class PostRepositoryImpl @Inject constructor(
                 TagEntity(id = id.toInt(), name = name, createdAt = now)
             }
             tagDao.insertPostTag(PostTagCrossRef(postId = postId, tagId = tag.id))
+        }
+    }
+
+    private suspend fun saveReferences(postId: Int, userIds: List<Int>) {
+        for (userId in userIds.distinct()) {
+            referenceDao.insert(PostReferenceEntity(postId = postId, userId = userId))
         }
     }
 }

@@ -32,6 +32,7 @@ data class PostEntity(
     val title: String,
     val content: String,
     val project: String? = null,
+    @ColumnInfo(name = "scheduled_date") val scheduledDate: String? = null,
     @ColumnInfo(name = "is_deleted") val isDeleted: Boolean = false,
     @ColumnInfo(name = "created_at") val createdAt: String,
     @ColumnInfo(name = "updated_at") val updatedAt: String

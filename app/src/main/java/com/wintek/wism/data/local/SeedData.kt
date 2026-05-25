@@ -10,19 +10,19 @@ object SeedData {
     private val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
     fun users(): List<UserEntity> = listOf(
-        UserEntity(id = 1, loginId = "10201", password = "test1234", name = "김팀장",
+        UserEntity(id = 1, loginId = "00000", password = "00000", name = "김팀장",
             department = "XR개발실 1팀", position = "팀장", email = "kim@wintek.co.kr",
             phone = "010-1111-1111", role = "manager", createdAt = ts(-30), updatedAt = ts(-30)),
-        UserEntity(id = 2, loginId = "10302", password = "test1234", name = "박팀장",
+        UserEntity(id = 2, loginId = "11111", password = "00000", name = "박팀장",
             department = "XR개발실 2팀", position = "팀장", email = "park@wintek.co.kr",
             phone = "010-2222-2222", role = "manager", createdAt = ts(-30), updatedAt = ts(-30)),
-        UserEntity(id = 3, loginId = "10403", password = "test1234", name = "이팀장",
+        UserEntity(id = 3, loginId = "22222", password = "00000", name = "이팀장",
             department = "XR개발실 3팀", position = "팀장", email = "lee@wintek.co.kr",
             phone = "010-3333-3333", role = "manager", createdAt = ts(-30), updatedAt = ts(-30)),
-        UserEntity(id = 4, loginId = "20101", password = "test1234", name = "최이사",
+        UserEntity(id = 4, loginId = "33333", password = "00000", name = "최이사",
             department = "경영지원실", position = "이사", email = "choi@wintek.co.kr",
             phone = "010-4444-4444", role = "admin", createdAt = ts(-30), updatedAt = ts(-30)),
-        UserEntity(id = 5, loginId = "10504", password = "test1234", name = "신팀장",
+        UserEntity(id = 5, loginId = "44444", password = "00000", name = "신팀장",
             department = "XR개발실 3팀", position = "대리", email = "shin@wintek.co.kr",
             phone = "010-5555-5555", role = "manager", createdAt = ts(-30), updatedAt = ts(-30))
     )
@@ -35,17 +35,17 @@ object SeedData {
             title = "A프로젝트 납기 변경 긴급 공유", content = "오전 10시 클라이언트로부터 납기 변경 요청이 들어왔습니다. 기존 4월 말에서 4월 15일로 2주 앞당겨졌습니다. 각 팀별 일정 재조정 필요합니다.",
             project = "A프로젝트", createdAt = ts(-1), updatedAt = ts(-1)),
         PostEntity(id = 3, userId = 1, category = "schedule", priority = "normal",
-            title = "3월 월간회의", content = "3월 월간회의를 다음과 같이 진행합니다.\n\n일시: 3월 25일(화) 오전 10시\n장소: 본사 3층 대회의실\n안건: 1분기 실적 리뷰, 2분기 계획 논의",
-            createdAt = ts(0), updatedAt = ts(0)),
+            title = "3월 월간회의", content = "3월 월간회의를 다음과 같이 진행합니다.\n\n일시: 오전 10시\n장소: 본사 3층 대회의실\n안건: 1분기 실적 리뷰, 2분기 계획 논의",
+            scheduledDate = scheduled(3), createdAt = ts(0), updatedAt = ts(0)),
         PostEntity(id = 4, userId = 1, category = "schedule", priority = "normal",
-            title = "고객사 미팅 일정", content = "B고객사 방문 미팅이 확정되었습니다.\n\n일시: 3월 28일(금) 오후 2시\n장소: B사 판교 오피스\n참석: 김팀장, 박팀장",
-            project = "B프로젝트", createdAt = ts(0), updatedAt = ts(0)),
+            title = "고객사 미팅 일정", content = "B고객사 방문 미팅이 확정되었습니다.\n\n일시: 오후 2시\n장소: B사 판교 오피스\n참석: 김팀장, 박팀장",
+            project = "B프로젝트", scheduledDate = scheduled(7), createdAt = ts(0), updatedAt = ts(0)),
         PostEntity(id = 5, userId = 4, category = "decision", priority = "normal",
             title = "신규 프로젝트 착수 결정", content = "경영회의에서 C프로젝트 착수가 결정되었습니다.\n\n프로젝트명: C프로젝트 (XR 교육 플랫폼)\n착수일: 4월 1일\n담당: XR개발실 3팀\n예산: 별도 공지",
             project = "C프로젝트", createdAt = ts(-3), updatedAt = ts(-3)),
         PostEntity(id = 6, userId = 3, category = "meeting", priority = "normal",
-            title = "주간 팀장회의 회의록", content = "금주 팀장회의 회의록입니다.\n\n1. A프로젝트 진행 현황 공유 (박팀장)\n2. 신규 인력 채용 건 (최이사)\n3. 사무실 이전 일정 확인\n\n다음 회의: 3월 29일(금) 오전 9시",
-            createdAt = ts(-1), updatedAt = ts(-1)),
+            title = "주간 팀장회의 회의록", content = "금주 팀장회의 회의록입니다.\n\n1. A프로젝트 진행 현황 공유 (박팀장)\n2. 신규 인력 채용 건 (최이사)\n3. 사무실 이전 일정 확인",
+            scheduledDate = scheduled(-1), createdAt = ts(-1), updatedAt = ts(-1)),
         PostEntity(id = 7, userId = 5, category = "other", priority = "normal",
             title = "사무실 이전 안내", content = "4월 중 사무실 이전이 예정되어 있습니다.\n\n이전 예정지: 판교 테크노밸리 2단지\n이전 시기: 4월 중순 (정확한 날짜 추후 공지)\n\n개인 짐 정리 부탁드립니다.",
             createdAt = ts(-5), updatedAt = ts(-5))
@@ -68,20 +68,30 @@ object SeedData {
             type = "comment", createdAt = ts(-3, 1), updatedAt = ts(-3, 1))
     )
 
+    // 태그 = 회사/사업 등 분류 라벨 (검색용)
     fun tags(): List<TagEntity> = listOf(
-        TagEntity(id = 1, name = "김팀장", createdAt = ts(-5)),
-        TagEntity(id = 2, name = "박팀장", createdAt = ts(-5)),
-        TagEntity(id = 3, name = "이팀장", createdAt = ts(-5)),
-        TagEntity(id = 4, name = "최이사", createdAt = ts(-5)),
-        TagEntity(id = 5, name = "신팀장", createdAt = ts(-5))
+        TagEntity(id = 1, name = "윈텍", createdAt = ts(-5)),
+        TagEntity(id = 2, name = "A프로젝트", createdAt = ts(-5)),
+        TagEntity(id = 3, name = "인프라", createdAt = ts(-5)),
+        TagEntity(id = 4, name = "경영", createdAt = ts(-5)),
+        TagEntity(id = 5, name = "C프로젝트", createdAt = ts(-5))
     )
 
     fun postTags(): List<PostTagCrossRef> = listOf(
-        PostTagCrossRef(postId = 1, tagId = 1),
-        PostTagCrossRef(postId = 1, tagId = 3),
-        PostTagCrossRef(postId = 2, tagId = 1),
-        PostTagCrossRef(postId = 2, tagId = 3),
-        PostTagCrossRef(postId = 5, tagId = 5)
+        PostTagCrossRef(postId = 1, tagId = 3),  // 인프라
+        PostTagCrossRef(postId = 1, tagId = 1),  // 윈텍
+        PostTagCrossRef(postId = 2, tagId = 2),  // A프로젝트
+        PostTagCrossRef(postId = 5, tagId = 5),  // C프로젝트
+        PostTagCrossRef(postId = 5, tagId = 4)   // 경영
+    )
+
+    // 참조 = 게시글에 참조된 사람 (user_id)
+    fun postReferences(): List<PostReferenceEntity> = listOf(
+        PostReferenceEntity(postId = 1, userId = 1),  // 김팀장
+        PostReferenceEntity(postId = 1, userId = 3),  // 이팀장
+        PostReferenceEntity(postId = 2, userId = 1),  // 김팀장
+        PostReferenceEntity(postId = 2, userId = 3),  // 이팀장
+        PostReferenceEntity(postId = 5, userId = 5)   // 신팀장
     )
 
     fun bookmarks(): List<BookmarkEntity> = listOf(
@@ -128,4 +138,8 @@ object SeedData {
 
     private fun ts(dayOffset: Int, hourOffset: Int = 0): String =
         now.plusDays(dayOffset.toLong()).plusHours(hourOffset.toLong()).format(fmt)
+
+    // 일정 날짜 (yyyy-MM-dd) - 오늘 기준 offset
+    private fun scheduled(dayOffset: Int): String =
+        now.toLocalDate().plusDays(dayOffset.toLong()).toString()
 }

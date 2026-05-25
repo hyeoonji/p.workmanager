@@ -33,6 +33,7 @@ object DatabaseModule {
                 WismDatabase::class.java,
                 "wism_database"
             )
+                .fallbackToDestructiveMigration(dropAllTables = true)
                 .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
@@ -55,6 +56,7 @@ object DatabaseModule {
         database.commentDao().insertAll(SeedData.comments())
         database.tagDao().insertAll(SeedData.tags())
         database.tagDao().insertPostTags(SeedData.postTags())
+        database.referenceDao().insertAll(SeedData.postReferences())
         database.bookmarkDao().insertAll(SeedData.bookmarks())
         database.readReceiptDao().insertAll(SeedData.readReceipts())
         database.notificationDao().insertAll(SeedData.notifications())
@@ -68,5 +70,6 @@ object DatabaseModule {
     @Provides fun provideReadReceiptDao(db: WismDatabase): ReadReceiptDao = db.readReceiptDao()
     @Provides fun provideNotificationDao(db: WismDatabase): NotificationDao = db.notificationDao()
     @Provides fun provideTagDao(db: WismDatabase): TagDao = db.tagDao()
+    @Provides fun provideReferenceDao(db: WismDatabase): ReferenceDao = db.referenceDao()
     @Provides fun provideUserSettingsDao(db: WismDatabase): UserSettingsDao = db.userSettingsDao()
 }

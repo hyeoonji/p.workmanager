@@ -17,8 +17,8 @@ interface PostRepository {
     suspend fun getMyPosts(userId: Int): List<Post>
     suspend fun getBookmarkedPosts(userId: Int): List<Post>
     suspend fun getPostDetail(postId: Int, currentUserId: Int): Post?
-    suspend fun createPost(userId: Int, title: String, content: String, category: String, priority: String, project: String?, tags: List<String>): Long
-    suspend fun updatePost(postId: Int, title: String, content: String, category: String, priority: String, project: String?, tags: List<String>)
+    suspend fun createPost(userId: Int, title: String, content: String, category: String, priority: String, project: String?, scheduledDate: String?, tags: List<String>, referenceIds: List<Int>): Long
+    suspend fun updatePost(postId: Int, title: String, content: String, category: String, priority: String, project: String?, scheduledDate: String?, tags: List<String>, referenceIds: List<Int>)
     suspend fun deletePost(postId: Int)
     suspend fun toggleBookmark(userId: Int, postId: Int): Boolean
     suspend fun markAsRead(userId: Int, postId: Int)

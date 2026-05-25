@@ -2,10 +2,12 @@ package com.wintek.wism.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wintek.wism.data.model.Author
 import com.wintek.wism.data.model.Post
 import com.wintek.wism.data.repository.AuthRepository
 import com.wintek.wism.data.repository.CommentRepository
 import com.wintek.wism.data.repository.PostRepository
+import com.wintek.wism.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,7 +39,8 @@ sealed class PostEvent {
 class PostViewModel @Inject constructor(
     private val postRepository: PostRepository,
     private val commentRepository: CommentRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _listState = MutableStateFlow(PostListState())
@@ -46,8 +49,17 @@ class PostViewModel @Inject constructor(
     private val _detailState = MutableStateFlow(PostDetailState())
     val detailState: StateFlow<PostDetailState> = _detailState.asStateFlow()
 
+    private val _availableUsers = MutableStateFlow<List<Author>>(emptyList())
+    val availableUsers: StateFlow<List<Author>> = _availableUsers.asStateFlow()
+
     private val _event = MutableSharedFlow<PostEvent>()
     val event = _event.asSharedFlow()
+
+    init {
+        viewModelScope.launch {
+            _availableUsers.value = userRepository.getActiveUsers()
+        }
+    }
 
     private var currentMode: ListMode = ListMode.All
 
@@ -134,17 +146,31 @@ class PostViewModel @Inject constructor(
         }
     }
 
-    fun createPost(title: String, content: String, category: String, priority: String, project: String?, tags: List<String>) {
+    fun editComment(postId: Int, commentId: Int, content: String) {
+        viewModelScope.launch {
+            commentRepository.updateComment(commentId, content)
+            loadPostDetail(postId)
+        }
+    }
+
+    fun deleteComment(postId: Int, commentId: Int) {
+        viewModelScope.launch {
+            commentRepository.deleteComment(commentId)
+            loadPostDetail(postId)
+        }
+    }
+
+    fun createPost(title: String, content: String, category: String, priority: String, project: String?, scheduledDate: String?, tags: List<String>, referenceIds: List<Int>) {
         viewModelScope.launch {
             val userId = authRepository.getCurrentUserId() ?: return@launch
-            postRepository.createPost(userId, title, content, category, priority, project, tags)
+            postRepository.createPost(userId, title, content, category, priority, project, scheduledDate, tags, referenceIds)
             _event.emit(PostEvent.Saved)
         }
     }
 
-    fun updatePost(postId: Int, title: String, content: String, category: String, priority: String, project: String?, tags: List<String>) {
+    fun updatePost(postId: Int, title: String, content: String, category: String, priority: String, project: String?, scheduledDate: String?, tags: List<String>, referenceIds: List<Int>) {
         viewModelScope.launch {
-            postRepository.updatePost(postId, title, content, category, priority, project, tags)
+            postRepository.updatePost(postId, title, content, category, priority, project, scheduledDate, tags, referenceIds)
             _event.emit(PostEvent.Saved)
         }
     }
