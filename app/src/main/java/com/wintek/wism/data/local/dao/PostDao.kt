@@ -33,7 +33,12 @@ interface PostDao {
         SELECT * FROM wism_posts
         WHERE is_deleted = 0
             AND (:category IS NULL OR category = :category)
-            AND (:search IS NULL OR title LIKE '%' || :search || '%' OR content LIKE '%' || :search || '%')
+            AND (:search IS NULL
+                OR title LIKE '%' || :search || '%'
+                OR content LIKE '%' || :search || '%'
+                OR project LIKE '%' || :search || '%'
+                OR EXISTS (SELECT 1 FROM wism_post_tags pt JOIN wism_tags t ON pt.tag_id = t.id
+                           WHERE pt.post_id = wism_posts.id AND t.name LIKE '%' || :search || '%'))
         ORDER BY
             CASE WHEN priority = 'urgent' THEN 0 ELSE 1 END,
             created_at DESC
@@ -50,7 +55,12 @@ interface PostDao {
         SELECT * FROM wism_posts
         WHERE is_deleted = 0
             AND (:category IS NULL OR category = :category)
-            AND (:search IS NULL OR title LIKE '%' || :search || '%' OR content LIKE '%' || :search || '%')
+            AND (:search IS NULL
+                OR title LIKE '%' || :search || '%'
+                OR content LIKE '%' || :search || '%'
+                OR project LIKE '%' || :search || '%'
+                OR EXISTS (SELECT 1 FROM wism_post_tags pt JOIN wism_tags t ON pt.tag_id = t.id
+                           WHERE pt.post_id = wism_posts.id AND t.name LIKE '%' || :search || '%'))
         ORDER BY created_at DESC
         LIMIT :limit OFFSET :offset
     """)
