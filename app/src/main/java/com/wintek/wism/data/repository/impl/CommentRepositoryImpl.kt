@@ -39,6 +39,14 @@ class CommentRepositoryImpl @Inject constructor(
         )
     }
 
+    override suspend fun updateComment(commentId: Int, content: String) {
+        commentDao.updateContent(commentId, content, LocalDateTime.now().format(fmt))
+    }
+
+    override suspend fun deleteComment(commentId: Int) {
+        commentDao.softDelete(commentId, LocalDateTime.now().format(fmt))
+    }
+
     private suspend fun CommentEntity.toComment(): Comment {
         val user = userDao.getById(userId)
         return Comment(

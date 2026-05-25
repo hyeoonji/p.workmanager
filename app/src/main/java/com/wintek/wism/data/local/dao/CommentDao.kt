@@ -21,6 +21,12 @@ interface CommentDao {
     @Query("SELECT COUNT(*) FROM wism_comments WHERE user_id = :userId AND is_deleted = 0")
     suspend fun countByUserId(userId: Int): Int
 
+    @Query("UPDATE wism_comments SET content = :content, updated_at = :updatedAt WHERE id = :id")
+    suspend fun updateContent(id: Int, content: String, updatedAt: String)
+
+    @Query("UPDATE wism_comments SET is_deleted = 1, updated_at = :updatedAt WHERE id = :id")
+    suspend fun softDelete(id: Int, updatedAt: String)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(comment: CommentEntity): Long
 

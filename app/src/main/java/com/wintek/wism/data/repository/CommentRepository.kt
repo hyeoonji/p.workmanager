@@ -7,4 +7,6 @@ interface CommentRepository {
     suspend fun getCommentsByPostId(postId: Int): List<Comment>
     fun observeCommentsByPostId(postId: Int): Flow<List<Comment>>
     suspend fun addComment(postId: Int, userId: Int, content: String, type: String = "comment"): Long
+    suspend fun updateComment(commentId: Int, content: String)
+    suspend fun deleteComment(commentId: Int)
 }

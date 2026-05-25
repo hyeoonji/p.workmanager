@@ -5,5 +5,6 @@ data class Comment(
     val author: Author,
     val content: String,
     val type: String = "comment",
-    val createdAt: String
+    val createdAt: String,
+    val isMine: Boolean = false
 )
