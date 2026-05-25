@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,6 +37,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -85,6 +87,9 @@ fun MemoDetailScreen(
     val detailState by viewModel.detailState.collectAsState()
     var commentText by remember { mutableStateOf("") }
     var showMenu by remember { mutableStateOf(false) }
+    var editingCommentId by remember { mutableStateOf<Int?>(null) }
+    var editingText by remember { mutableStateOf("") }
+    var deleteTargetId by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(postId) {
         viewModel.loadPostDetail(postId)
@@ -201,13 +206,24 @@ fun MemoDetailScreen(
                     }
                 }
 
-                // 태그
+                // 참조 (사람)
+                if (post.references.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("참조:", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                        post.references.forEach { person ->
+                            Badge(text = "@${person.name}", textColor = Primary, outlined = true)
+                        }
+                    }
+                }
+
+                // 태그 (분류)
                 if (post.tags.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("담당자:", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("태그:", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
                         post.tags.forEach { tag ->
-                            Badge(text = "@$tag", textColor = TextSecondary, outlined = true)
+                            Badge(text = "#$tag", textColor = TextSecondary, outlined = true)
                         }
                     }
                 }
@@ -237,7 +253,19 @@ fun MemoDetailScreen(
 
                 if (post.comments.isNotEmpty()) {
                     post.comments.forEach { comment ->
-                        CommentItem(comment)
+                        CommentItem(
+                            comment = comment,
+                            isEditing = editingCommentId == comment.id,
+                            editingText = editingText,
+                            onEditTextChange = { editingText = it },
+                            onStartEdit = { editingCommentId = comment.id; editingText = comment.content },
+                            onConfirmEdit = {
+                                if (editingText.isNotBlank()) viewModel.editComment(postId, comment.id, editingText.trim())
+                                editingCommentId = null
+                            },
+                            onCancelEdit = { editingCommentId = null },
+                            onDelete = { deleteTargetId = comment.id }
+                        )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 } else {
@@ -279,10 +307,43 @@ fun MemoDetailScreen(
             }
         }
     }
+
+    if (deleteTargetId != null) {
+        AlertDialog(
+            onDismissRequest = { deleteTargetId = null },
+            title = { Text("댓글 삭제") },
+            text = { Text("이 댓글을 삭제하시겠습니까?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    deleteTargetId?.let { viewModel.deleteComment(postId, it) }
+                    deleteTargetId = null
+                }) {
+                    Text("삭제", color = com.wintek.wism.ui.theme.Destructive)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteTargetId = null }) { Text("취소") }
+            }
+        )
+    }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CommentItem(comment: Comment) {
+private fun CommentItem(
+    comment: Comment,
+    isEditing: Boolean = false,
+    editingText: String = "",
+    onEditTextChange: (String) -> Unit = {},
+    onStartEdit: () -> Unit = {},
+    onConfirmEdit: () -> Unit = {},
+    onCancelEdit: () -> Unit = {},
+    onDelete: () -> Unit = {}
+) {
+    // 본인이 작성한 일반 댓글만 수정/삭제 가능 (확인완료 상태 댓글 제외)
+    val canModify = comment.isMine && comment.type == "comment"
+    var menuExpanded by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -298,15 +359,60 @@ private fun CommentItem(comment: Comment) {
             Text(comment.author.name.first().toString(), style = MaterialTheme.typography.labelSmall, color = Primary)
         }
         Column(modifier = Modifier.weight(1f)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(comment.author.name, style = MaterialTheme.typography.labelSmall)
-                Text(comment.createdAt.substringAfter("T").take(5), style = MaterialTheme.typography.labelSmall, color = TextSecondary)
-                if (comment.type == "status") {
-                    Badge(text = "확인완료", backgroundColor = Success.copy(alpha = 0.15f), textColor = Success)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(comment.author.name, style = MaterialTheme.typography.labelSmall)
+                    Text(comment.createdAt.substringAfter("T").take(5), style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                    if (comment.type == "status") {
+                        Badge(text = "확인완료", backgroundColor = Success.copy(alpha = 0.15f), textColor = Success)
+                    }
+                }
+                if (canModify && !isEditing) {
+                    Box {
+                        IconButton(
+                            onClick = { menuExpanded = true },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "더보기", modifier = Modifier.size(16.dp), tint = TextSecondary)
+                        }
+                        DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                            DropdownMenuItem(
+                                text = { Text("수정") },
+                                onClick = { menuExpanded = false; onStartEdit() }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("삭제", color = com.wintek.wism.ui.theme.Destructive) },
+                                onClick = { menuExpanded = false; onDelete() }
+                            )
+                        }
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(2.dp))
-            Text(comment.content, style = MaterialTheme.typography.bodySmall)
+            if (isEditing) {
+                OutlinedTextField(
+                    value = editingText,
+                    onValueChange = onEditTextChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedContainerColor = InputBackground,
+                        focusedContainerColor = InputBackground
+                    )
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = onCancelEdit) { Text("취소") }
+                    TextButton(onClick = onConfirmEdit, enabled = editingText.isNotBlank()) {
+                        Text("저장", color = Primary)
+                    }
+                }
+            } else {
+                Text(comment.content, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.wintek.wism.ui.screens.memo
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +18,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -29,8 +33,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.wintek.wism.data.model.Author
 import com.wintek.wism.data.model.Category
 import com.wintek.wism.data.model.Priority
 import com.wintek.wism.ui.theme.Background
@@ -54,6 +61,11 @@ import com.wintek.wism.viewmodel.PostViewModel
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Clear
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,8 +81,14 @@ fun WriteMemoScreen(
     var selectedPriority by remember { mutableStateOf(Priority.NORMAL) }
     var selectedCategory by remember { mutableStateOf(Category.SCHEDULE) }
     var project by remember { mutableStateOf("") }
+    var scheduledDate by remember { mutableStateOf<String?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
     var tagInput by remember { mutableStateOf("") }
     var tags by remember { mutableStateOf(listOf<String>()) }
+    var refInput by remember { mutableStateOf("") }
+    var references by remember { mutableStateOf(listOf<com.wintek.wism.data.model.Author>()) }
+
+    val availableUsers by viewModel.availableUsers.collectAsState()
 
     // 수정 모드: 기존 데이터 로드
     val detailState by viewModel.detailState.collectAsState()
@@ -85,7 +103,9 @@ fun WriteMemoScreen(
                 selectedPriority = post.priority
                 selectedCategory = post.category
                 project = post.project ?: ""
+                scheduledDate = post.scheduledDate
                 tags = post.tags
+                references = post.references
             }
         }
     }
@@ -151,6 +171,36 @@ fun WriteMemoScreen(
                 )
             }
 
+            // 일정 날짜 (선택)
+            Text("일정 날짜 (선택)", style = MaterialTheme.typography.labelLarge)
+            OutlinedTextField(
+                value = scheduledDate ?: "",
+                onValueChange = {},
+                readOnly = true,
+                placeholder = { Text("날짜를 지정하면 캘린더에 표시됩니다", color = TextSecondary) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showDatePicker = true },
+                enabled = false,
+                shape = RoundedCornerShape(10.dp),
+                leadingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = Primary) },
+                trailingIcon = {
+                    if (scheduledDate != null) {
+                        IconButton(onClick = { scheduledDate = null }) {
+                            Icon(Icons.Default.Clear, contentDescription = "날짜 지우기", tint = TextSecondary)
+                        }
+                    }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledContainerColor = InputBackground,
+                    disabledTextColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = Border,
+                    disabledLeadingIconColor = Primary,
+                    disabledTrailingIconColor = TextSecondary,
+                    disabledPlaceholderColor = TextSecondary
+                )
+            )
+
             // 프로젝트
             Text("프로젝트", style = MaterialTheme.typography.labelLarge)
             OutlinedTextField(
@@ -180,13 +230,13 @@ fun WriteMemoScreen(
                 )
             )
 
-            // 태그
-            Text("담당자 태그", style = MaterialTheme.typography.labelLarge)
+            // 태그 (회사/사업 등 분류 라벨, 검색용)
+            Text("태그", style = MaterialTheme.typography.labelLarge)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = tagInput,
                     onValueChange = { tagInput = it },
-                    placeholder = { Text("담당자명", color = TextSecondary) },
+                    placeholder = { Text("회사·사업명 등", color = TextSecondary) },
                     modifier = Modifier.weight(1f),
                     maxLines = 1,
                     shape = RoundedCornerShape(10.dp),
@@ -197,7 +247,7 @@ fun WriteMemoScreen(
                 )
                 OutlinedButton(
                     onClick = {
-                        if (tagInput.isNotBlank() && tagInput !in tags) {
+                        if (tagInput.isNotBlank() && tagInput.trim() !in tags) {
                             tags = tags + tagInput.trim()
                             tagInput = ""
                         }
@@ -206,11 +256,46 @@ fun WriteMemoScreen(
                 ) { Text("추가") }
             }
             if (tags.isNotEmpty()) {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     tags.forEach { tag ->
                         androidx.compose.material3.AssistChip(
                             onClick = { tags = tags - tag },
-                            label = { Text(tag, style = MaterialTheme.typography.labelSmall) },
+                            label = { Text("#$tag", style = MaterialTheme.typography.labelSmall) },
+                            trailingIcon = {
+                                Icon(Icons.Default.Close, contentDescription = "삭제", modifier = Modifier.size(14.dp))
+                            }
+                        )
+                    }
+                }
+            }
+
+            // 참조 (사람, 사용자 ID 기반 자동완성)
+            Text("참조", style = MaterialTheme.typography.labelLarge)
+            ReferencePicker(
+                input = refInput,
+                onInputChange = { refInput = it },
+                candidates = availableUsers.filter { user ->
+                    refInput.isNotBlank() &&
+                        user.name.contains(refInput.trim(), ignoreCase = true) &&
+                        references.none { it.id == user.id }
+                },
+                onSelect = { user ->
+                    references = references + user
+                    refInput = ""
+                }
+            )
+            if (references.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    references.forEach { person ->
+                        androidx.compose.material3.AssistChip(
+                            onClick = { references = references - person },
+                            label = { Text("@${person.name}", style = MaterialTheme.typography.labelSmall) },
                             trailingIcon = {
                                 Icon(Icons.Default.Close, contentDescription = "삭제", modifier = Modifier.size(14.dp))
                             }
@@ -230,10 +315,11 @@ fun WriteMemoScreen(
                 ) { Text("취소") }
                 Button(
                     onClick = {
+                        val referenceIds = references.map { it.id }
                         if (isEdit && postId != null) {
-                            viewModel.updatePost(postId, title, content, selectedCategory.value, selectedPriority.value, project.ifBlank { null }, tags)
+                            viewModel.updatePost(postId, title, content, selectedCategory.value, selectedPriority.value, project.ifBlank { null }, scheduledDate, tags, referenceIds)
                         } else {
-                            viewModel.createPost(title, content, selectedCategory.value, selectedPriority.value, project.ifBlank { null }, tags)
+                            viewModel.createPost(title, content, selectedCategory.value, selectedPriority.value, project.ifBlank { null }, scheduledDate, tags, referenceIds)
                         }
                     },
                     modifier = Modifier.weight(1f),
@@ -241,6 +327,82 @@ fun WriteMemoScreen(
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Primary)
                 ) { Text("저장", color = TextOnPrimary) }
+            }
+        }
+    }
+
+    if (showDatePicker) {
+        val initialMillis = scheduledDate?.let {
+            runCatching { LocalDate.parse(it).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() }.getOrNull()
+        }
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        scheduledDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate().toString()
+                    }
+                    showDatePicker = false
+                }) { Text("확인", color = Primary) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("취소") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReferencePicker(
+    input: String,
+    onInputChange: (String) -> Unit,
+    candidates: List<Author>,
+    onSelect: (Author) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    LaunchedEffect(candidates.size, input) {
+        expanded = input.isNotBlank() && candidates.isNotEmpty()
+    }
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = {}) {
+        OutlinedTextField(
+            value = input,
+            onValueChange = onInputChange,
+            placeholder = { Text("이름 입력 후 선택", color = TextSecondary) },
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryEditable)
+                .fillMaxWidth(),
+            maxLines = 1,
+            shape = RoundedCornerShape(10.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedContainerColor = InputBackground,
+                focusedContainerColor = InputBackground
+            )
+        )
+        if (candidates.isNotEmpty()) {
+            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                candidates.forEach { user ->
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                            ) {
+                                Text(user.name, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    listOfNotNull(user.department, user.position).joinToString(" / "),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TextSecondary
+                                )
+                            }
+                        },
+                        onClick = { onSelect(user) }
+                    )
+                }
             }
         }
     }

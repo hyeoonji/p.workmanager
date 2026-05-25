@@ -2,6 +2,7 @@ package com.wintek.wism.ui.screens.calendar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,6 +26,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -98,16 +101,21 @@ private fun CalendarContent(
 ) {
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(LocalDate.now()) }
+    var categoryFilter by remember { mutableStateOf<Category?>(null) }
 
-    // 날짜별 게시글 매핑
-    val postsByDate = remember(posts) {
-        posts.groupBy { post ->
-            try {
-                LocalDate.parse(post.createdAt.substringBefore("T"))
-            } catch (_: Exception) {
-                null
+    // 일정 날짜(scheduledDate)가 지정된 게시글만 캘린더에 표시. 카테고리 필터 적용.
+    val postsByDate = remember(posts, categoryFilter) {
+        posts
+            .filter { it.scheduledDate != null && (categoryFilter == null || it.category == categoryFilter) }
+            .groupBy { post ->
+                try {
+                    LocalDate.parse(post.scheduledDate!!.substringBefore("T"))
+                } catch (_: Exception) {
+                    null
+                }
             }
-        }.filterKeys { it != null }.mapKeys { it.key!! }
+            .filterKeys { it != null }
+            .mapKeys { it.key!! }
     }
 
     val selectedPosts = selectedDate?.let { postsByDate[it] } ?: emptyList()
@@ -130,6 +138,28 @@ private fun CalendarContent(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            // 카테고리 필터
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = categoryFilter == null,
+                    onClick = { categoryFilter = null },
+                    label = { Text("전체") }
+                )
+                Category.entries.forEach { category ->
+                    FilterChip(
+                        selected = categoryFilter == category,
+                        onClick = { categoryFilter = category },
+                        label = { Text(category.label) }
+                    )
+                }
+            }
+
             // 달력
             CalendarGrid(
                 yearMonth = currentMonth,

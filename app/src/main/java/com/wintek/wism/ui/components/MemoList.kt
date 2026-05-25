@@ -1,5 +1,7 @@
 package com.wintek.wism.ui.components
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +22,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,8 +66,6 @@ fun MemoList(
     var selectedCategory by remember { mutableStateOf<String?>(null) }
     var sortByPriority by remember { mutableStateOf(true) }
 
-    val hasFilter = selectedCategory != null
-
     Column(modifier = modifier.fillMaxSize()) {
         // 검색바
         OutlinedTextField(
@@ -73,7 +74,7 @@ fun MemoList(
                 searchQuery = it
                 onSearch(it)
             },
-            placeholder = { Text("메모 검색...", color = TextSecondary) },
+            placeholder = { Text("제목·내용·태그 검색...", color = TextSecondary) },
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp), tint = TextSecondary)
             },
@@ -98,7 +99,35 @@ fun MemoList(
             )
         )
 
-        // 필터 행
+        // 카테고리 탭 (상단 구분)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = selectedCategory == null,
+                onClick = {
+                    selectedCategory = null
+                    onCategoryFilter(null)
+                },
+                label = { Text("전체") }
+            )
+            Category.entries.forEach { category ->
+                FilterChip(
+                    selected = selectedCategory == category.value,
+                    onClick = {
+                        selectedCategory = category.value
+                        onCategoryFilter(category.value)
+                    },
+                    label = { Text(category.label) }
+                )
+            }
+        }
+
+        // 정렬 행
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -106,19 +135,6 @@ fun MemoList(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 카테고리 필터
-            FilterDropdown(
-                modifier = Modifier.weight(1f),
-                label = selectedCategory?.let { Category.fromValue(it).label } ?: "카테고리",
-                options = Category.entries.map { it.value to it.label },
-                selectedValue = selectedCategory,
-                onSelect = {
-                    selectedCategory = it
-                    onCategoryFilter(it)
-                }
-            )
-
-            // 정렬 순서
             FilterDropdown(
                 modifier = Modifier.weight(1f),
                 label = if (sortByPriority) "우선순위순" else "최신순",
@@ -129,16 +145,6 @@ fun MemoList(
                     onSortChanged(sortByPriority)
                 }
             )
-
-            // 초기화
-            if (hasFilter) {
-                TextButton(onClick = {
-                    selectedCategory = null
-                    onCategoryFilter(null)
-                }) {
-                    Text("초기화", style = MaterialTheme.typography.labelSmall, color = Primary)
-                }
-            }
         }
 
         // 결과 카운트

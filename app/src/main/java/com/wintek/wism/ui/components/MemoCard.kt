@@ -126,16 +126,15 @@ fun MemoCard(
                     )
                 }
 
-                // 태그
-                if (post.tags.isNotEmpty()) {
+                // 태그(분류) + 참조(사람)
+                if (post.tags.isNotEmpty() || post.references.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         post.tags.forEach { tag ->
-                            MemoCardBadge(
-                                text = "@$tag",
-                                textColor = TextSecondary,
-                                outlined = true
-                            )
+                            MemoCardBadge(text = "#$tag", textColor = TextSecondary, outlined = true)
+                        }
+                        post.references.forEach { person ->
+                            MemoCardBadge(text = "@${person.name}", textColor = Primary, outlined = true)
                         }
                     }
                 }
