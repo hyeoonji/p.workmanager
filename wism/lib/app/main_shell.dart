@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../core/theme/app_colors.dart';
 
@@ -9,11 +10,11 @@ class MainShell extends StatelessWidget {
   const MainShell({super.key, required this.navigationShell});
 
   static const _tabs = [
-    (icon: Icons.home_outlined, label: '홈'),
-    (icon: Icons.insert_drive_file_outlined, label: '전체'),
-    (icon: Icons.menu_book_outlined, label: '내 메모'),
-    (icon: Icons.bookmark_border, label: '북마크'),
-    (icon: Icons.person_outline, label: '프로필'),
+    (icon: LucideIcons.house, label: '홈'),
+    (icon: LucideIcons.fileText, label: '전체'),
+    (icon: LucideIcons.bookOpen, label: '내 메모'),
+    (icon: LucideIcons.bookmark, label: '북마크'),
+    (icon: LucideIcons.user, label: '프로필'),
   ];
 
   void _onTap(int index) {
@@ -50,24 +51,22 @@ class MainShell extends StatelessWidget {
               children: List.generate(_tabs.length, (i) {
                 final t = _tabs[i];
                 final selected = i == current;
-                final color = selected
-                    ? AppColors.primary
-                    : const Color(0xFFAAB4C8);
+                final color =
+                    selected ? AppColors.primary : AppColors.iconInactive;
                 return Expanded(
                   child: InkWell(
                     onTap: () => _onTap(i),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(t.icon, size: 24, color: color),
+                        Icon(t.icon, size: 20, color: color),
                         const SizedBox(height: 4),
                         Text(
                           t.label,
                           style: TextStyle(
                             fontSize: 12,
                             color: color,
-                            fontWeight:
-                                selected ? FontWeight.w600 : FontWeight.w400,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],

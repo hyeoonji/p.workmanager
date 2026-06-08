@@ -7,6 +7,24 @@ ShapeBorder _shape() =>
 
 const _inset = EdgeInsets.symmetric(horizontal: 32);
 
+/// 취소 버튼 (radius8, 회색 배경) — 디자인 모달 공통.
+ButtonStyle _cancelStyle() => OutlinedButton.styleFrom(
+      backgroundColor: AppColors.background,
+      foregroundColor: AppColors.textSub,
+      side: const BorderSide(color: AppColors.border),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      padding: const EdgeInsets.symmetric(vertical: 11),
+      textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+    );
+
+/// 확정 버튼 (radius8) — 디자인 모달 공통.
+ButtonStyle _confirmStyle(Color? color) => FilledButton.styleFrom(
+      backgroundColor: color ?? AppColors.primary,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      padding: const EdgeInsets.symmetric(vertical: 11),
+      textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+    );
+
 /// 확인/취소 다이얼로그 (디자인 모달 톤: 둥근 16, 제목 17, 좌우 균등 버튼).
 Future<bool?> showConfirmDialog(
   BuildContext context, {
@@ -46,23 +64,16 @@ Future<bool?> showConfirmDialog(
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx, false),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Text(cancelText),
-                    ),
+                    style: _cancelStyle(),
+                    child: Text(cancelText),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: FilledButton(
                     onPressed: () => Navigator.pop(ctx, true),
-                    style: confirmColor == null
-                        ? null
-                        : FilledButton.styleFrom(backgroundColor: confirmColor),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Text(confirmText),
-                    ),
+                    style: _confirmStyle(confirmColor),
+                    child: Text(confirmText),
                   ),
                 ),
               ],
@@ -115,10 +126,8 @@ Future<String?> showEditTextDialog(
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10),
-                      child: Text('취소'),
-                    ),
+                    style: _cancelStyle(),
+                    child: const Text('취소'),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -126,10 +135,8 @@ Future<String?> showEditTextDialog(
                   child: FilledButton(
                     onPressed: () =>
                         Navigator.pop(ctx, controller.text.trim()),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10),
-                      child: Text('저장'),
-                    ),
+                    style: _confirmStyle(null),
+                    child: const Text('저장'),
                   ),
                 ),
               ],

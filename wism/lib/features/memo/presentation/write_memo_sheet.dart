@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
@@ -11,29 +12,24 @@ import '../domain/memo_draft.dart';
 import 'widgets/search_pickers.dart';
 import 'widgets/wism_date_picker.dart';
 
-/// 메모 작성/수정 시트. 성공 시 true 반환.
+/// 메모 작성/수정 — 디자인(MemoForm) 기반 중앙 모달. 성공 시 true 반환.
 Future<bool?> showWriteMemoSheet(BuildContext context, {Memo? edit}) {
-  return showModalBottomSheet<bool>(
+  return showDialog<bool>(
     context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
     useRootNavigator: true,
-    backgroundColor: AppColors.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
-    builder: (_) => _WriteMemoSheet(edit: edit),
+    barrierColor: Colors.black.withValues(alpha: 0.45),
+    builder: (_) => _WriteMemoDialog(edit: edit),
   );
 }
 
-class _WriteMemoSheet extends ConsumerStatefulWidget {
-  const _WriteMemoSheet({this.edit});
+class _WriteMemoDialog extends ConsumerStatefulWidget {
+  const _WriteMemoDialog({this.edit});
   final Memo? edit;
   @override
-  ConsumerState<_WriteMemoSheet> createState() => _WriteMemoSheetState();
+  ConsumerState<_WriteMemoDialog> createState() => _WriteMemoDialogState();
 }
 
-class _WriteMemoSheetState extends ConsumerState<_WriteMemoSheet> {
+class _WriteMemoDialogState extends ConsumerState<_WriteMemoDialog> {
   late final TextEditingController _title;
   late final TextEditingController _content;
   late String _priority;
@@ -44,6 +40,9 @@ class _WriteMemoSheetState extends ConsumerState<_WriteMemoSheet> {
   bool _saving = false;
 
   bool get _isEdit => widget.edit != null;
+  bool get _canSubmit =>
+      _title.text.trim().isNotEmpty &&
+      (_category != MemoCategory.schedule || _scheduledDate != null);
 
   @override
   void initState() {
@@ -69,7 +68,7 @@ class _WriteMemoSheetState extends ConsumerState<_WriteMemoSheet> {
   }
 
   Future<void> _save() async {
-    if (_title.text.trim().isEmpty) return;
+    if (!_canSubmit) return;
     setState(() => _saving = true);
     final draft = MemoDraft(
       title: _title.text.trim(),
@@ -77,7 +76,8 @@ class _WriteMemoSheetState extends ConsumerState<_WriteMemoSheet> {
       priority: _priority,
       category: _category,
       projectId: _project?.id,
-      scheduledDate: _scheduledDate,
+      scheduledDate:
+          _category == MemoCategory.schedule ? _scheduledDate : null,
       assigneeIds: _assignees.map((u) => u.id).toList(),
     );
     try {
@@ -99,64 +99,70 @@ class _WriteMemoSheetState extends ConsumerState<_WriteMemoSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.9,
+    final size = MediaQuery.sizeOf(context);
+    final width = (size.width * 0.95).clamp(0.0, 480.0);
+    return Dialog(
+      insetPadding: const EdgeInsets.all(12),
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: width,
+          maxHeight: size.height * 0.88,
+        ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             _header(),
-            const Divider(height: 1),
-            Expanded(
+            Flexible(
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 children: [
-                  _label('제목'),
-                  TextField(
-                    controller: _title,
-                    decoration: const InputDecoration(hintText: '메모 제목을 입력하세요'),
-                  ),
+                  _field('제목',
+                      TextField(
+                        controller: _title,
+                        onChanged: (_) => setState(() {}),
+                        style: _inputTextStyle,
+                        decoration: _dec('메모 제목을 입력하세요'),
+                      )),
                   const SizedBox(height: 16),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: _dropdown('중요도', _priority, MemoPriority.all, (v) => setState(() => _priority = v))),
+                      Expanded(
+                        child: _field('중요도',
+                            _dropdown(_priority, MemoPriority.all,
+                                (v) => setState(() => _priority = v))),
+                      ),
                       const SizedBox(width: 12),
-                      Expanded(child: _dropdown('카테고리', _category, MemoCategory.all, (v) => setState(() => _category = v))),
+                      Expanded(
+                        child: _field('카테고리',
+                            _dropdown(_category, MemoCategory.all,
+                                (v) => setState(() => _category = v))),
+                      ),
                     ],
                   ),
                   if (_category == MemoCategory.schedule) ...[
                     const SizedBox(height: 16),
-                    _label('일정 날짜'),
-                    WismDatePicker(
-                      value: _scheduledDate,
-                      onChanged: (d) => setState(() => _scheduledDate = d),
-                    ),
+                    _field('일정 일시',
+                        WismDatePicker(
+                          value: _scheduledDate,
+                          onChanged: (d) => setState(() => _scheduledDate = d),
+                        )),
                   ],
                   const SizedBox(height: 16),
-                  _label('사업 (프로젝트)'),
-                  _tapField(
-                    _project == null
-                        ? '사업 선택'
-                        : '${_project!.name}${_project!.clientName != null ? ' · ${_project!.clientName}' : ''}',
-                    _project == null,
-                    () async {
-                      final p = await pickProject(context);
-                      if (p != null) setState(() => _project = p);
-                    },
-                    icon: Icons.work_outline,
-                    onClear: _project == null ? null : () => setState(() => _project = null),
-                  ),
+                  _field('사업 (프로젝트)', _projectField()),
                   const SizedBox(height: 16),
-                  _label('내용'),
-                  TextField(
-                    controller: _content,
-                    maxLines: 5,
-                    decoration: const InputDecoration(hintText: '메모 내용을 입력하세요'),
-                  ),
+                  _field('내용',
+                      TextField(
+                        controller: _content,
+                        maxLines: 5,
+                        style: _inputTextStyle,
+                        decoration: _dec('메모 내용을 입력하세요'),
+                      )),
                   const SizedBox(height: 16),
-                  _label('담당자 태그'),
-                  _assigneeField(),
+                  _field('담당자 태그', _assigneeField()),
                 ],
               ),
             ),
@@ -167,134 +173,241 @@ class _WriteMemoSheetState extends ConsumerState<_WriteMemoSheet> {
     );
   }
 
-  Widget _header() => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 8, 12),
+  // ── 헤더 ──
+  Widget _header() => Container(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppColors.divider)),
+        ),
         child: Row(
           children: [
             Text(_isEdit ? '메모 수정' : '새 메모 작성',
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textTitle)),
             const Spacer(),
-            IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.close),
+            InkWell(
+              onTap: () => Navigator.pop(context),
+              customBorder: const CircleBorder(),
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
+                    color: AppColors.background, shape: BoxShape.circle),
+                child: const Icon(LucideIcons.x, size: 15, color: AppColors.textSub),
+              ),
             ),
           ],
         ),
       );
 
-  Widget _footer() => SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10),
-                    child: Text('취소'),
-                  ),
+  // ── 푸터 ──
+  Widget _footer() => Container(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: AppColors.divider)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textSub,
+                  backgroundColor: AppColors.background,
+                  side: const BorderSide(color: AppColors.border),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(vertical: 11),
                 ),
+                child: const Text('취소',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: FilledButton(
-                  onPressed: _saving ? null : _save,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: _saving
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white))
-                        : const Text('저장'),
-                  ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: FilledButton(
+                onPressed: (_saving || !_canSubmit) ? null : _save,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  disabledBackgroundColor: AppColors.buttonDisabled,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(vertical: 11),
                 ),
+                child: _saving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : const Text('저장',
+                        style:
+                            TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
 
-  Widget _label(String t) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(t,
-            style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textTitle)),
+  // ── 공통 필드 (라벨 + 위젯) ──
+  Widget _field(String label, Widget child) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(label,
+                style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textTitle)),
+          ),
+          child,
+        ],
       );
 
-  Widget _dropdown(String label, String value, List<String> items,
-      ValueChanged<String> onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _label(label),
-        DropdownButtonFormField<String>(
-          initialValue: value,
-          items: items
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
-          onChanged: (v) => v == null ? null : onChanged(v),
-        ),
-      ],
+  static const _inputTextStyle =
+      TextStyle(fontSize: 14, color: AppColors.textTitle);
+
+  InputDecoration _dec(String hint) => InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(fontSize: 14, color: Color(0xFFA0ADB8)),
+        isDense: true,
+        filled: true,
+        fillColor: AppColors.surface,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        enabledBorder: _border(AppColors.border, 1),
+        focusedBorder: _border(AppColors.primary, 1),
+        border: _border(AppColors.border, 1),
+      );
+
+  static OutlineInputBorder _border(Color c, double w) => OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: c, width: w),
+      );
+
+  Widget _dropdown(String value, List<String> items, ValueChanged<String> onChanged) {
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      isDense: true,
+      icon: const Icon(LucideIcons.chevronDown, size: 16, color: AppColors.textSub),
+      style: _inputTextStyle,
+      decoration: _dec(''),
+      items: items
+          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+          .toList(),
+      onChanged: (v) => v == null ? null : onChanged(v),
     );
   }
 
-  Widget _tapField(String text, bool isPlaceholder, VoidCallback onTap,
-      {required IconData icon, VoidCallback? onClear}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          prefixIcon: Icon(icon, size: 18),
-          suffixIcon: onClear != null
-              ? IconButton(icon: const Icon(Icons.clear, size: 18), onPressed: onClear)
-              : const Icon(Icons.chevron_right),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isPlaceholder ? AppColors.textMuted : AppColors.textBody,
-          ),
-        ),
-      ),
+  // 사업: 검색 피커(자동완성) — 디자인 필드 외형으로 표시.
+  Widget _projectField() {
+    final p = _project;
+    final text = p == null
+        ? '사업명을 검색하세요'
+        : '${p.name}${p.clientName != null ? ' · ${p.clientName}' : ''}';
+    return _tapField(
+      text: text,
+      placeholder: p == null,
+      onTap: () async {
+        final picked = await pickProject(context);
+        if (picked != null) setState(() => _project = picked);
+      },
+      onClear: p == null ? null : () => setState(() => _project = null),
     );
   }
 
+  // 담당자: 검색 피커 + 칩.
   Widget _assigneeField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _tapField('담당자 검색·추가', true, () async {
-          final u = await pickUser(context);
-          if (u != null && !_assignees.any((e) => e.id == u.id)) {
-            setState(() => _assignees.add(u));
-          }
-        }, icon: Icons.person_add_alt),
+        _tapField(
+          text: '담당자명을 검색하세요',
+          placeholder: true,
+          onTap: () async {
+            final u = await pickUser(context);
+            if (u != null && !_assignees.any((e) => e.id == u.id)) {
+              setState(() => _assignees.add(u));
+            }
+          },
+        ),
         if (_assignees.isNotEmpty) ...[
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,
             runSpacing: 6,
-            children: _assignees
-                .map((u) => Chip(
-                      label: Text('@${u.name}'),
-                      onDeleted: () => setState(() => _assignees.remove(u)),
-                      backgroundColor: const Color(0xFFE8F1FB),
-                      labelStyle: const TextStyle(
-                          color: AppColors.primary, fontSize: 12),
-                      deleteIconColor: AppColors.primary,
-                    ))
-                .toList(),
+            children: _assignees.map((u) {
+              return Container(
+                padding: const EdgeInsets.fromLTRB(8, 3, 6, 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F1FB),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('@${u.name}',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.primary)),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () => setState(() => _assignees.remove(u)),
+                      child: const Icon(LucideIcons.x,
+                          size: 11, color: AppColors.primary),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
           ),
         ],
       ],
     );
   }
 
+  Widget _tapField({
+    required String text,
+    required bool placeholder,
+    required VoidCallback onTap,
+    VoidCallback? onClear,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(text,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: 14,
+                      color: placeholder
+                          ? const Color(0xFFA0ADB8)
+                          : AppColors.textBody)),
+            ),
+            if (onClear != null)
+              GestureDetector(
+                onTap: onClear,
+                child: const Icon(LucideIcons.x, size: 16, color: AppColors.textMuted),
+              )
+            else
+              const Icon(LucideIcons.search, size: 16, color: AppColors.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
 }

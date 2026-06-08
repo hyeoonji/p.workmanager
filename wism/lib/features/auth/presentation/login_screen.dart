@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../application/auth_controller.dart';
@@ -44,6 +45,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       setState(() => _error = '사번과 비밀번호를 입력하세요.');
       return;
     }
+    FocusScope.of(context).unfocus(); // 키보드 닫기
     setState(() {
       _loading = true;
       _error = null;
@@ -143,27 +145,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             const SizedBox(height: 20),
                             _label('사번'),
                             _inputBox(
-                              icon: Icons.person_outline,
+                              icon: LucideIcons.user,
                               focusNode: _idFocus,
                               controller: _idController,
                               hint: '사번을 입력하세요',
                               keyboardType: TextInputType.number,
+                              textInputAction: TextInputAction.next,
+                              onSubmitted: (_) => _pwFocus.requestFocus(),
                             ),
                             const SizedBox(height: 16),
                             _label('비밀번호'),
                             _inputBox(
-                              icon: Icons.lock_outline,
+                              icon: LucideIcons.lock,
                               focusNode: _pwFocus,
                               controller: _pwController,
                               hint: '비밀번호를 입력하세요',
                               obscure: _obscure,
+                              textInputAction: TextInputAction.done,
                               onSubmitted: (_) => _submit(),
                               trailing: IconButton(
                                 icon: Icon(
                                   _obscure
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  size: 18,
+                                      ? LucideIcons.eyeOff
+                                      : LucideIcons.eye,
+                                  size: 16,
                                   color: AppColors.textMuted,
                                 ),
                                 onPressed: () =>
@@ -246,6 +251,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     bool obscure = false,
     Widget? trailing,
     TextInputType? keyboardType,
+    TextInputAction? textInputAction,
     ValueChanged<String>? onSubmitted,
   }) {
     final focused = focusNode.hasFocus;
@@ -271,6 +277,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               focusNode: focusNode,
               obscureText: obscure,
               keyboardType: keyboardType,
+              textInputAction: textInputAction,
               onChanged: (_) => setState(() {}),
               onSubmitted: onSubmitted,
               decoration: const InputDecoration(
@@ -301,7 +308,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               borderRadius: BorderRadius.circular(5),
               color: _autoLogin ? AppColors.primary : AppColors.surface,
               border: Border.all(
-                color: _autoLogin ? AppColors.primary : const Color(0xFFD1D9E6),
+                color: _autoLogin ? AppColors.primary : AppColors.checkboxBorder,
                 width: 2,
               ),
             ),

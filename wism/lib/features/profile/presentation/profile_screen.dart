@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../auth/application/auth_controller.dart';
@@ -26,115 +27,163 @@ class ProfileScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // 프로필 카드
+          // ── 1. 프로필 카드 ──
           _card(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 26,
-                      backgroundColor: const Color(0xFFEBF3FB),
-                      child: Text(initials,
-                          style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary)),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(user.name,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w700)),
-                          const SizedBox(height: 2),
-                          Text(
-                            [user.dept, user.position]
-                                .where((e) => e != null && e.isNotEmpty)
-                                .join(' · '),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                            color: Color(0xFFEBF3FB), shape: BoxShape.circle),
+                        alignment: Alignment.center,
+                        child: Text(initials,
                             style: const TextStyle(
-                                fontSize: 12, color: AppColors.textMuted),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primary)),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(user.name,
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textTitle)),
+                            if ([user.dept, user.position]
+                                .any((e) => e != null && e.isNotEmpty)) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                [user.dept, user.position]
+                                    .where((e) => e != null && e.isNotEmpty)
+                                    .join(' · '),
+                                style: const TextStyle(
+                                    fontSize: 12, color: AppColors.textMuted),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () => showProfileEditSheet(context, user),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F1FB),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        ],
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(LucideIcons.pencil,
+                                  size: 14, color: AppColors.primary),
+                              SizedBox(width: 6),
+                              Text('편집',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.primary)),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        await showProfileEditSheet(context, user);
-                      },
-                      icon: const Icon(Icons.edit, size: 14),
-                      label: const Text('편집'),
-                      style: OutlinedButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const Divider(height: 24),
-                _infoRow(Icons.badge_outlined, '사번', user.employeeNo),
-                _infoRow(Icons.mail_outline, '이메일', user.email ?? '-'),
-                _infoRow(Icons.phone_outlined, '전화번호', user.phone ?? '-'),
+                _fullDivider(),
+                _infoRow(LucideIcons.mail, '이메일', user.email ?? '-'),
+                _indentDivider(),
+                _infoRow(LucideIcons.phone, '전화번호', user.phone ?? '-'),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          // 활동 통계
+          const SizedBox(height: 20),
+
+          // ── 2. 활동 통계 ──
           const _SectionLabel('활동 통계'),
           _card(
-            padding: const EdgeInsets.symmetric(vertical: 16),
             child: stats.when(
               loading: () => const SizedBox(
-                  height: 60, child: Center(child: CircularProgressIndicator())),
+                  height: 88, child: Center(child: CircularProgressIndicator())),
               error: (_, _) => const SizedBox(
-                  height: 60, child: Center(child: Text('통계를 불러오지 못했습니다.'))),
-              data: (s) => Row(
-                children: [
-                  _stat('내 메모', s.memos, AppColors.primary,
-                      const Color(0xFFEBF3FB), Icons.description_outlined),
-                  _divider(),
-                  _stat('댓글', s.comments, AppColors.catMeeting,
-                      const Color(0xFFEEEAF6), Icons.chat_bubble_outline),
-                  _divider(),
-                  _stat('북마크', s.bookmarks, AppColors.catDecision,
-                      const Color(0xFFE6F4EA), Icons.bookmark_border),
-                ],
+                  height: 88, child: Center(child: Text('통계를 불러오지 못했습니다.'))),
+              data: (s) => IntrinsicHeight(
+                child: Row(
+                  children: [
+                    _stat('내 메모', s.memos, AppColors.primary,
+                        const Color(0xFFEBF3FB), LucideIcons.fileText),
+                    _statDivider(),
+                    _stat('댓글', s.comments, AppColors.catMeeting,
+                        const Color(0xFFEEEAF6), LucideIcons.messageSquare),
+                    _statDivider(),
+                    _stat('북마크', s.bookmarks, AppColors.catDecision,
+                        const Color(0xFFE6F4EA), LucideIcons.bookmark),
+                  ],
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          // 설정
+          const SizedBox(height: 20),
+
+          // ── 3. 설정 ──
           const _SectionLabel('설정'),
           _card(
-            padding: EdgeInsets.zero,
             child: Column(
               children: [
-                SwitchListTile(
-                  title: const Text('푸시 알림'),
-                  secondary: const Icon(Icons.notifications_outlined),
-                  value: pushEnabled,
-                  onChanged: (v) =>
-                      ref.read(pushEnabledProvider.notifier).set(v),
+                _settingRow(
+                  iconBg: const Color(0xFFFEF3E2),
+                  iconColor: const Color(0xFFD9822B),
+                  icon: LucideIcons.bell,
+                  label: '푸시 알림',
+                  trailing: _Toggle(
+                    value: pushEnabled,
+                    onChanged: (v) =>
+                        ref.read(pushEnabledProvider.notifier).set(v),
+                  ),
                 ),
-                const Divider(height: 1),
-                const ListTile(
-                  leading: Icon(Icons.info_outline),
-                  title: Text('버전 정보'),
-                  trailing: Text('v1.0.0',
-                      style: TextStyle(color: AppColors.textMuted)),
+                _indentDivider(),
+                _settingRow(
+                  iconBg: const Color(0xFFEEF1F5),
+                  iconColor: AppColors.textSub,
+                  icon: LucideIcons.info,
+                  label: '버전 정보',
+                  trailing: const Text('v1.0.0',
+                      style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          Center(
-            child: TextButton.icon(
-              onPressed: () =>
-                  ref.read(authControllerProvider.notifier).logout(),
-              icon: const Icon(Icons.logout, color: AppColors.danger),
-              label: const Text('로그아웃',
-                  style: TextStyle(color: AppColors.danger)),
+          const SizedBox(height: 20),
+
+          // ── 4. 로그아웃 ──
+          _fullDivider(),
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: () => ref.read(authControllerProvider.notifier).logout(),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(LucideIcons.logOut, size: 16, color: AppColors.danger),
+                  SizedBox(width: 8),
+                  Text('로그아웃',
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.danger)),
+                ],
+              ),
             ),
           ),
         ],
@@ -142,56 +191,118 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _card({required Widget child, EdgeInsets? padding}) => Container(
-        padding: padding ?? const EdgeInsets.all(16),
+  Widget _card({required Widget child}) => Container(
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
+          border: Border.all(color: AppColors.cardBorder),
         ),
         child: child,
       );
 
+  Widget _fullDivider() =>
+      Container(height: 1, color: AppColors.divider);
+
+  Widget _indentDivider() => Container(
+      height: 1, margin: const EdgeInsets.only(left: 56), color: AppColors.divider);
+
   Widget _infoRow(IconData icon, String label, String value) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: AppColors.primary),
-            const SizedBox(width: 12),
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 13, color: AppColors.textMuted)),
-            const Spacer(),
-            Text(value,
-                style: const TextStyle(
-                    fontSize: 14, color: AppColors.textBody)),
-          ],
-        ),
-      );
-
-  Widget _stat(String label, int count, Color color, Color bg, IconData icon) =>
-      Expanded(
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: bg,
-              child: Icon(icon, color: color, size: 16),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEBF3FB),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 16, color: AppColors.primary),
             ),
-            const SizedBox(height: 6),
-            Text('$count',
-                style: TextStyle(
-                    fontSize: 22, fontWeight: FontWeight.bold, color: color)),
-            const SizedBox(height: 2),
-            Text(label,
-                style:
-                    const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label,
+                      style: const TextStyle(
+                          fontSize: 11, color: AppColors.textMuted)),
+                  Text(value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 14, color: AppColors.textBody)),
+                ],
+              ),
+            ),
           ],
         ),
       );
 
-  Widget _divider() =>
-      Container(width: 1, height: 36, color: const Color(0xFFEEF1F5));
+  Widget _settingRow({
+    required Color iconBg,
+    required Color iconColor,
+    required IconData icon,
+    required String label,
+    required Widget trailing,
+  }) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration:
+                  BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(8)),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 16, color: iconColor),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(label,
+                  style: const TextStyle(fontSize: 14, color: AppColors.textBody)),
+            ),
+            trailing,
+          ],
+        ),
+      );
+
+  Widget _stat(String label, int count, Color iconColor, Color bg, IconData icon) =>
+      Expanded(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+                alignment: Alignment.center,
+                child: Icon(icon, color: iconColor, size: 16),
+              ),
+              const SizedBox(height: 6),
+              Text('$count',
+                  style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                      height: 1)),
+              const SizedBox(height: 2),
+              Text(label,
+                  style:
+                      const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+            ],
+          ),
+        ),
+      );
+
+  Widget _statDivider() => Container(
+      width: 1,
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      color: AppColors.divider);
 }
 
 class _SectionLabel extends StatelessWidget {
@@ -206,4 +317,51 @@ class _SectionLabel extends StatelessWidget {
                 fontWeight: FontWeight.w500,
                 color: AppColors.textMuted)),
       );
+}
+
+/// 커스텀 토글 — 44×24, ON 네이비 / OFF #D1D8E0.
+class _Toggle extends StatelessWidget {
+  const _Toggle({required this.value, required this.onChanged});
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 44,
+        height: 24,
+        decoration: BoxDecoration(
+          color: value ? AppColors.primary : AppColors.toggleOff,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Stack(
+          children: [
+            AnimatedAlign(
+              duration: const Duration(milliseconds: 200),
+              alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+              child: Container(
+                margin: const EdgeInsets.all(2),
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.22),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

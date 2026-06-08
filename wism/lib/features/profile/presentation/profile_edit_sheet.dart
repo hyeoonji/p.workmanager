@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../auth/application/auth_controller.dart';
@@ -13,7 +14,7 @@ Future<bool?> showProfileEditSheet(BuildContext context, AppUser user) {
     useRootNavigator: true,
     backgroundColor: AppColors.surface,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
     builder: (_) => _ProfileEditSheet(user: user),
   );
@@ -85,7 +86,7 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(LucideIcons.x, size: 20),
                   ),
                 ],
               ),
@@ -96,12 +97,25 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   Center(
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: const Color(0xFFEBF3FB),
-                      child: Text(initials,
-                          style: const TextStyle(
-                              fontSize: 24, color: AppColors.primary)),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 96,
+                          height: 96,
+                          decoration: const BoxDecoration(
+                              color: Color(0xFFEBF3FB), shape: BoxShape.circle),
+                          alignment: Alignment.center,
+                          child: Text(initials,
+                              style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primary)),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('사진은 회사 시스템에서 관리됩니다',
+                            style: TextStyle(
+                                fontSize: 12, color: AppColors.textMuted)),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -115,33 +129,49 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
             ),
             SafeArea(
               top: false,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
+                decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: AppColors.divider)),
+                ),
                 child: Row(
                   children: [
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 10),
-                          child: Text('취소'),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: AppColors.background,
+                          foregroundColor: AppColors.textSub,
+                          side: const BorderSide(color: AppColors.border),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(vertical: 11),
                         ),
+                        child: const Text('취소',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w500)),
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: FilledButton(
                         onPressed: _saving ? null : _save,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          child: _saving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white))
-                              : const Text('저장'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          disabledBackgroundColor: AppColors.buttonDisabled,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(vertical: 11),
                         ),
+                        child: _saving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white))
+                            : const Text('저장',
+                                style: TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.w600)),
                       ),
                     ),
                   ],
@@ -169,9 +199,28 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
                     fontWeight: FontWeight.w500,
                     color: AppColors.textTitle)),
           ),
-          TextField(controller: c, keyboardType: keyboard),
+          TextField(
+            controller: c,
+            keyboardType: keyboard,
+            style: const TextStyle(fontSize: 14, color: AppColors.textTitle),
+            decoration: InputDecoration(
+              isDense: true,
+              filled: true,
+              fillColor: AppColors.surface,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              enabledBorder: _border(AppColors.border),
+              focusedBorder: _border(AppColors.primary),
+              border: _border(AppColors.border),
+            ),
+          ),
         ],
       ),
     );
   }
+
+  static OutlineInputBorder _border(Color c) => OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: c),
+      );
 }

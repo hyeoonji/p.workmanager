@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/utils/formats.dart';
@@ -35,11 +36,6 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
     ref.invalidate(allMemosProvider);
   }
 
-  Future<void> _markRead() async {
-    await ref.read(memoRepositoryProvider).markRead(widget.memoId);
-    _refresh();
-  }
-
   Future<void> _addComment() async {
     final text = _commentController.text.trim();
     if (text.isEmpty) return;
@@ -72,6 +68,7 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
     final ok = await showConfirmDialog(
       context,
       title: '댓글을 삭제할까요?',
+      message: '삭제된 댓글은 복구할 수 없습니다.',
       confirmText: '삭제',
       confirmColor: AppColors.danger,
     );
@@ -112,6 +109,16 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
             data: (m) {
               if (m.author.id != currentUserId) return const SizedBox.shrink();
               return PopupMenuButton<String>(
+                icon: const Icon(LucideIcons.moreVertical),
+                color: AppColors.surface,
+                elevation: 8,
+                clipBehavior: Clip.antiAlias,
+                position: PopupMenuPosition.under,
+                constraints: const BoxConstraints(minWidth: 120),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: const BorderSide(color: AppColors.cardBorder),
+                ),
                 onSelected: (v) async {
                   if (v == 'edit') {
                     final saved = await showWriteMemoSheet(context, edit: m);
@@ -120,9 +127,19 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
                     _delete();
                   }
                 },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'edit', child: Text('수정')),
-                  PopupMenuItem(value: 'delete', child: Text('삭제')),
+                itemBuilder: (_) => [
+                  const PopupMenuItem(
+                    value: 'edit',
+                    height: 44,
+                    padding: EdgeInsets.zero,
+                    child: _MenuRow(text: '수정', borderBottom: true),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    height: 44,
+                    padding: EdgeInsets.zero,
+                    child: _MenuRow(text: '삭제', color: AppColors.danger),
+                  ),
                 ],
               );
             },
@@ -144,7 +161,6 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
   }
 
   Widget _body(Memo memo) {
-    final confirmed = memo.isRead;
     final currentUserId = ref.read(authControllerProvider).user?.id;
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -172,14 +188,18 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
                 Text(memo.title,
                     style: const TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
                         color: AppColors.textTitle)),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Row(
                   children: [
-                    CircleAvatar(
-                      radius: 10,
-                      backgroundColor: const Color(0xFFEBF3FB),
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: const BoxDecoration(
+                          color: Color(0xFFEBF3FB), shape: BoxShape.circle),
+                      alignment: Alignment.center,
                       child: Text(
                         memo.author.name.characters.first,
                         style: const TextStyle(
@@ -189,73 +209,68 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Text(memo.author.name,
+                    Text(
+                        '${memo.author.name} 작성 · ${fmtDate(memo.createdAt)} ${fmtTime(memo.createdAt)}',
                         style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textSub)),
-                    Text(' · ${fmtDateTime(memo.createdAt)}',
-                        style: const TextStyle(
-                            fontSize: 12, color: AppColors.textMuted)),
+                            fontSize: 12, color: Color(0xFF8A94A6))),
                   ],
                 ),
                 if (memo.scheduledDate != null) ...[
-                  const SizedBox(height: 4),
-                  Text('일정: ${fmtDate(memo.scheduledDate!)}',
-                      style: const TextStyle(
-                          fontSize: 12, color: AppColors.catSchedule)),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F1FB),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(LucideIcons.calendarDays,
+                            size: 14, color: AppColors.primary),
+                        const SizedBox(width: 6),
+                        Text('일정: ${fmtScheduled(memo.scheduledDate!)}',
+                            style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary)),
+                      ],
+                    ),
+                  ),
                 ],
                 if (memo.assignees.isNotEmpty) ...[
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
                     children: memo.assignees
                         .map((a) => Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFEBF3FB),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text('@${a.name}',
                                   style: const TextStyle(
-                                      fontSize: 12, color: AppColors.primary)),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.primary)),
                             ))
                         .toList(),
                   ),
                 ],
-                const Divider(height: 24),
+                Container(
+                    height: 1,
+                    margin: const EdgeInsets.symmetric(vertical: 16),
+                    color: AppColors.divider),
                 Text(
                   (memo.content ?? '').isEmpty ? '내용이 없습니다.' : memo.content!,
                   style: const TextStyle(
                       fontSize: 14, color: AppColors.textBody, height: 1.6),
                 ),
               ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        // 읽음 확인
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-            onPressed: confirmed ? null : _markRead,
-            style: FilledButton.styleFrom(
-              backgroundColor:
-                  confirmed ? const Color(0xFFE6F4EA) : AppColors.primary,
-              disabledBackgroundColor: const Color(0xFFE6F4EA),
-            ),
-            icon: Icon(Icons.check_circle,
-                color: confirmed ? AppColors.catDecision : Colors.white, size: 18),
-            label: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                confirmed ? '확인 완료  (읽음 ${memo.readBy}/${memo.totalReaders})' : '읽음 확인',
-                style: TextStyle(
-                    color: confirmed ? AppColors.catDecision : Colors.white,
-                    fontWeight: FontWeight.w600),
-              ),
             ),
           ),
         ),
@@ -277,7 +292,7 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.chat_bubble_outline,
+                  Icon(LucideIcons.messageSquare,
                       size: 32, color: Color(0xFFD1D9E6)),
                   SizedBox(height: 8),
                   Text('첫 번째 댓글을 남겨보세요',
@@ -334,7 +349,7 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
                                   child: const Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.check_circle,
+                                      Icon(LucideIcons.checkCircle,
                                           size: 11, color: AppColors.catDecision),
                                       SizedBox(width: 3),
                                       Text('확인 완료',
@@ -353,16 +368,36 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
                                   child: PopupMenuButton<String>(
                                     padding: EdgeInsets.zero,
                                     iconSize: 18,
-                                    icon: const Icon(Icons.more_vert,
+                                    color: AppColors.surface,
+                                    elevation: 8,
+                                    clipBehavior: Clip.antiAlias,
+                                    position: PopupMenuPosition.under,
+                                    constraints:
+                                        const BoxConstraints(minWidth: 120),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                      side: const BorderSide(
+                                          color: AppColors.cardBorder),
+                                    ),
+                                    icon: const Icon(LucideIcons.moreVertical,
                                         color: AppColors.textMuted),
                                     onSelected: (v) => v == 'edit'
                                         ? _editComment(c)
                                         : _deleteComment(c),
                                     itemBuilder: (_) => const [
                                       PopupMenuItem(
-                                          value: 'edit', child: Text('수정')),
+                                          value: 'edit',
+                                          height: 44,
+                                          padding: EdgeInsets.zero,
+                                          child: _MenuRow(
+                                              text: '수정', borderBottom: true)),
                                       PopupMenuItem(
-                                          value: 'delete', child: Text('삭제')),
+                                          value: 'delete',
+                                          height: 44,
+                                          padding: EdgeInsets.zero,
+                                          child: _MenuRow(
+                                              text: '삭제',
+                                              color: AppColors.danger)),
                                     ],
                                   ),
                                 ),
@@ -390,9 +425,9 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
       child: Container(
         decoration: const BoxDecoration(
           color: AppColors.surface,
-          border: Border(top: BorderSide(color: AppColors.border)),
+          border: Border(top: BorderSide(color: Color(0x1A14387F))),
         ),
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -415,20 +450,87 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
                 controller: _commentController,
                 minLines: 1,
                 maxLines: 4,
-                decoration: const InputDecoration(
+                onChanged: (_) => setState(() {}),
+                style: const TextStyle(fontSize: 14, color: AppColors.textTitle),
+                decoration: InputDecoration(
                   hintText: '댓글을 입력하세요...',
+                  hintStyle:
+                      const TextStyle(fontSize: 14, color: AppColors.textMuted),
                   isDense: true,
+                  filled: true,
+                  fillColor: AppColors.background,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0x1A14387F)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.skyBlue),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0x1A14387F)),
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            IconButton.filled(
-              onPressed: _sending ? null : _addComment,
-              style: IconButton.styleFrom(backgroundColor: AppColors.primary),
-              icon: const Icon(Icons.send, size: 18),
-            ),
+            _SendButton(
+                enabled: !_sending && _commentController.text.trim().isNotEmpty,
+                onTap: _addComment),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 팝업 메뉴 항목 — 흰 카드 메뉴 안의 한 줄(높이 44, 14px w500).
+class _MenuRow extends StatelessWidget {
+  const _MenuRow(
+      {required this.text,
+      this.color = AppColors.textTitle,
+      this.borderBottom = false});
+  final String text;
+  final Color color;
+  final bool borderBottom;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        height: 44,
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: borderBottom
+            ? const BoxDecoration(
+                border: Border(bottom: BorderSide(color: AppColors.divider)))
+            : null,
+        child: Text(text,
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w500, color: color)),
+      );
+}
+
+/// 댓글 전송 버튼 — 36 원형, 활성 네이비 / 비활성 #D1D9E6.
+class _SendButton extends StatelessWidget {
+  const _SendButton({required this.enabled, required this.onTap});
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: enabled ? AppColors.primary : const Color(0xFFD1D9E6),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(LucideIcons.send, size: 16, color: Colors.white),
       ),
     );
   }

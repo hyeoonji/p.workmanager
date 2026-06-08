@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../notification/presentation/widgets/notification_bell.dart';
@@ -42,7 +43,7 @@ class MemoTabScaffold extends ConsumerWidget {
               foregroundColor: Colors.white,
               elevation: 4,
               shape: const CircleBorder(),
-              child: const Icon(Icons.add, size: 26),
+              child: const Icon(LucideIcons.plus, size: 24),
             )
           : null,
     );

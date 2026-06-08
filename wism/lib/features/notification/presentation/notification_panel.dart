@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/utils/formats.dart';
@@ -36,10 +37,10 @@ class _IconCfg {
 }
 
 const _iconConfig = {
-  'comment': _IconCfg(Color(0xFFE8F1FB), Color(0xFF2B9CD8), Icons.chat_bubble_outline),
-  'mention': _IconCfg(Color(0xFFEEEAF6), Color(0xFF6B5B95), Icons.notifications_none),
-  'status': _IconCfg(Color(0xFFE6F4EA), Color(0xFF2E7D52), Icons.check_circle_outline),
-  'urgent': _IconCfg(Color(0xFFFEE4E2), Color(0xFFD92D20), Icons.error_outline),
+  'comment': _IconCfg(Color(0xFFE8F1FB), Color(0xFF2B9CD8), LucideIcons.messageCircle),
+  'mention': _IconCfg(Color(0xFFEEEAF6), Color(0xFF6B5B95), LucideIcons.bell),
+  'status': _IconCfg(Color(0xFFE6F4EA), Color(0xFF2E7D52), LucideIcons.checkCircle),
+  'urgent': _IconCfg(Color(0xFFFEE4E2), Color(0xFFD92D20), LucideIcons.alertCircle),
 };
 
 class _NotificationPanel extends ConsumerWidget {
@@ -130,7 +131,7 @@ class _NotificationPanel extends ConsumerWidget {
             const SizedBox(width: 8),
             GestureDetector(
               onTap: () => Navigator.pop(context),
-              child: const Icon(Icons.close, size: 20, color: AppColors.textSub),
+              child: const Icon(LucideIcons.x, size: 20, color: AppColors.textSub),
             ),
           ],
         ),
@@ -142,7 +143,7 @@ class _NotificationPanel extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.notifications_none,
+            Icon(LucideIcons.bell,
                 size: 40, color: Color(0x808A97A8)),
             SizedBox(height: 8),
             Text('알림이 없습니다',

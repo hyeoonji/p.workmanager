@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../application/notification_providers.dart';
 import '../notification_panel.dart';
@@ -18,8 +19,11 @@ class NotificationBell extends ConsumerWidget {
       tooltip: '알림',
       icon: Badge(
         isLabelVisible: count > 0,
-        label: Text('$count'),
-        child: const Icon(Icons.notifications_outlined),
+        backgroundColor: const Color(0xFFEF4444),
+        textColor: Colors.white,
+        label: Text(count > 9 ? '9+' : '$count',
+            style: const TextStyle(fontSize: 10)),
+        child: const Icon(LucideIcons.bell, size: 20, color: Colors.white),
       ),
       onPressed: () => showNotificationPanel(context),
     );

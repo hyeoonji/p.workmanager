@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -20,6 +21,7 @@ class MemoListView extends ConsumerStatefulWidget {
 
 class _MemoListViewState extends ConsumerState<MemoListView> {
   final _searchController = TextEditingController();
+  final _sortKey = GlobalKey();
   String _filter = '전체'; // 전체/긴급/일정/이슈/결정사항/회의록/기타
   String _query = '';
   MemoSort _sort = MemoSort.latest;
@@ -42,6 +44,56 @@ class _MemoListViewState extends ConsumerState<MemoListView> {
     await ref.read(memoRepositoryProvider).setBookmark(id, bookmarked: !current);
     ref.invalidate(memoListProvider);
     ref.invalidate(allMemosProvider);
+  }
+
+  /// 정렬 메뉴 — 루트 네비게이터에 띄워 탭 전환 시 닫히게 한다.
+  Future<void> _openSortMenu() async {
+    final buttonCtx = _sortKey.currentContext;
+    if (buttonCtx == null) return;
+    final button = buttonCtx.findRenderObject() as RenderBox;
+    final overlay = Navigator.of(context, rootNavigator: true)
+        .overlay!
+        .context
+        .findRenderObject() as RenderBox;
+    final topRight =
+        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay);
+    final position = RelativeRect.fromRect(
+      Rect.fromPoints(topRight, topRight),
+      Offset.zero & overlay.size,
+    );
+    final selected = await showMenu<MemoSort>(
+      context: context,
+      useRootNavigator: true,
+      position: position,
+      color: AppColors.surface,
+      elevation: 8,
+      clipBehavior: Clip.antiAlias,
+      constraints: const BoxConstraints(minWidth: 110),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0x1F14387F)),
+      ),
+      items: _sortLabels.entries.map((e) {
+        final sel = e.key == _sort;
+        return PopupMenuItem<MemoSort>(
+          value: e.key,
+          height: 40,
+          padding: EdgeInsets.zero,
+          child: Container(
+            width: double.infinity,
+            height: 40,
+            alignment: Alignment.centerLeft,
+            color: sel ? const Color(0xFFEBF3FB) : null,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(e.value,
+                style: TextStyle(
+                    fontSize: 13,
+                    color: sel ? AppColors.primary : AppColors.textSub)),
+          ),
+        );
+      }).toList(),
+    );
+    if (selected != null && mounted) setState(() => _sort = selected);
   }
 
   @override
@@ -121,7 +173,7 @@ class _MemoListViewState extends ConsumerState<MemoListView> {
         decoration: InputDecoration(
           hintText: '제목, 내용, 사업명 검색...',
           hintStyle: const TextStyle(color: Color(0xFFAAB4C8), fontSize: 14),
-          prefixIcon: const Icon(Icons.search, size: 18, color: Color(0xFFAAB4C8)),
+          prefixIcon: const Icon(LucideIcons.search, size: 16, color: AppColors.iconInactive),
           filled: true,
           fillColor: AppColors.surface,
           isDense: true,
@@ -191,21 +243,22 @@ class _MemoListViewState extends ConsumerState<MemoListView> {
           Text('총 ${count ?? 0}건',
               style: const TextStyle(fontSize: 13, color: AppColors.textSub)),
           const Spacer(),
-          PopupMenuButton<MemoSort>(
-            initialValue: _sort,
-            onSelected: (v) => setState(() => _sort = v),
-            itemBuilder: (_) => _sortLabels.entries
-                .map((e) => PopupMenuItem(value: e.key, child: Text(e.value)))
-                .toList(),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(_sortLabels[_sort]!,
-                    style: const TextStyle(
-                        fontSize: 13, color: AppColors.textSub)),
-                const Icon(Icons.keyboard_arrow_down,
-                    size: 16, color: AppColors.textSub),
-              ],
+          InkWell(
+            key: _sortKey,
+            onTap: _openSortMenu,
+            borderRadius: BorderRadius.circular(6),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_sortLabels[_sort]!,
+                      style: const TextStyle(
+                          fontSize: 13, color: AppColors.textSub)),
+                  const Icon(LucideIcons.chevronDown,
+                      size: 14, color: AppColors.textSub),
+                ],
+              ),
             ),
           ),
         ],

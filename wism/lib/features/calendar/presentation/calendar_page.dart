@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/utils/formats.dart';
-import '../../../shared/widgets/memo_badges.dart';
 import '../../memo/application/memo_providers.dart';
 import '../../memo/data/models/memo.dart';
 import '../../memo/presentation/memo_detail_page.dart';
@@ -30,7 +30,13 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   Widget build(BuildContext context) {
     final async = ref.watch(allMemosProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('캘린더'), centerTitle: true),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(LucideIcons.arrowLeft),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('캘린더'),
+      ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const Center(child: Text('불러오지 못했습니다.')),
@@ -60,13 +66,13 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _navBtn(Icons.chevron_left, _prev),
+          _navBtn(LucideIcons.chevronLeft, _prev),
           Text('${_month.year}년 ${_month.month}월',
               style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: AppColors.primary)),
-          _navBtn(Icons.chevron_right, _next),
+          _navBtn(LucideIcons.chevronRight, _next),
         ],
       ),
     );
@@ -110,7 +116,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                 final c = i == 0
                     ? AppColors.danger
                     : i == 6
-                        ? AppColors.catSchedule
+                        ? AppColors.skyBlue
                         : AppColors.textMuted;
                 return Expanded(
                   child: Center(
@@ -130,7 +136,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                   children: List.generate(7, (col) {
                     final day = row * 7 + col - firstDow + 1;
                     if (day < 1 || day > daysInMonth) {
-                      return const Expanded(child: SizedBox(height: 50));
+                      return const Expanded(child: SizedBox(height: 48));
                     }
                     final date = DateTime(_month.year, _month.month, day);
                     final selected = date == _selected;
@@ -148,14 +154,14 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                             : col == 0
                                 ? AppColors.danger
                                 : col == 6
-                                    ? AppColors.catSchedule
+                                    ? AppColors.skyBlue
                                     : AppColors.textTitle;
                     return Expanded(
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () => setState(() => _selected = date),
                         child: SizedBox(
-                          height: 50,
+                          height: 48,
                           child: Column(
                             children: [
                               const SizedBox(height: 4),
@@ -248,11 +254,18 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     );
   }
 
+  Widget _miniChip(String text, Color fg, Color bg) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration:
+            BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
+        child: Text(text, style: TextStyle(fontSize: 11, color: fg)),
+      );
+
   Widget _memoCard(Memo m) {
     final barColor =
         m.isUrgent ? AppColors.danger : AppColors.category(m.category);
     final meta = [
-      fmtTime(m.createdAt),
+      fmtTime(m.scheduledDate ?? m.createdAt), // 일정 시각 표시
       m.author.name,
       if (m.project != null) m.project!.name,
     ].join(' · ');
@@ -300,9 +313,20 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                                   height: 1.4)),
                         ),
                         const SizedBox(width: 8),
-                        if (m.isUrgent) const UrgentBadge(),
-                        if (m.isUrgent) const SizedBox(width: 4),
-                        CategoryBadge(m.category),
+                        // 긴급 + 카테고리 배지를 한 줄로
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (m.isUrgent) ...[
+                              _miniChip('긴급', AppColors.urgentFg, AppColors.urgentBg),
+                              const SizedBox(width: 4),
+                            ],
+                            _miniChip(
+                                m.category,
+                                AppColors.categoryBadgeFg(m.category),
+                                AppColors.categoryBadgeBg(m.category)),
+                          ],
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/utils/formats.dart';
@@ -25,12 +26,12 @@ class MemoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
-        boxShadow: [
+        border: Border.all(color: AppColors.cardBorder),
+        boxShadow: const [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.04),
+            color: Color(0x0F14387F), // rgba(20,56,127,0.06)
             blurRadius: 4,
-            offset: const Offset(0, 1),
+            offset: Offset(0, 1),
           ),
         ],
       ),
@@ -95,11 +96,13 @@ class MemoCard extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(left: 8, top: 2),
                     child: Icon(
-                      memo.bookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      size: 18,
+                      memo.bookmarked
+                          ? LucideIcons.bookmarkCheck
+                          : LucideIcons.bookmark,
+                      size: 16,
                       color: memo.bookmarked
                           ? AppColors.primary
-                          : const Color(0xFFAAB4C8),
+                          : AppColors.iconInactive,
                     ),
                   ),
                 ),
@@ -112,42 +115,33 @@ class MemoCard extends StatelessWidget {
   }
 
   Widget _meta() {
-    return DefaultTextStyle(
-      style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-      child: Row(
-        children: [
-          Flexible(
-            child: Text(
-              memo.author.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: AppColors.textSub),
-            ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // 작성자 · 시간 — 한 텍스트로 합쳐 베이스라인 통일
+        Flexible(
+          child: Text.rich(
+            TextSpan(children: [
+              TextSpan(
+                  text: memo.author.name,
+                  style: const TextStyle(color: AppColors.textSub)),
+              const TextSpan(text: '  ·  '),
+              TextSpan(text: fmtTime(memo.createdAt)),
+            ]),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
           ),
-          const _Dot(),
-          Text(fmtShort(memo.createdAt)),
-          const _Dot(),
-          const Icon(Icons.visibility_outlined, size: 14, color: AppColors.textMuted),
+        ),
+        if (memo.commentCount > 0) ...[
+          const SizedBox(width: 10),
+          const Icon(LucideIcons.messageSquare,
+              size: 14, color: AppColors.textMuted),
           const SizedBox(width: 3),
-          Text('${memo.readBy}'),
-          if (memo.commentCount > 0) ...[
-            const SizedBox(width: 10),
-            const Icon(Icons.mode_comment_outlined,
-                size: 14, color: AppColors.textMuted),
-            const SizedBox(width: 3),
-            Text('${memo.commentCount}'),
-          ],
+          Text('${memo.commentCount}',
+              style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
         ],
-      ),
+      ],
     );
   }
-}
-
-class _Dot extends StatelessWidget {
-  const _Dot();
-  @override
-  Widget build(BuildContext context) => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 6),
-        child: Text('·', style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
-      );
 }

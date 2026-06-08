@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 토큰 검증 중 표시. 분기는 라우터 redirect(인증 상태)가 처리.
 class SplashScreen extends StatelessWidget {
@@ -37,7 +38,7 @@ class SplashScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.shield_outlined,
+                    child: const Icon(LucideIcons.shield,
                         color: Colors.white, size: 44),
                   ),
                   const SizedBox(height: 20),
@@ -66,23 +67,25 @@ class SplashScreen extends StatelessWidget {
             Align(
               alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 40),
+                padding: EdgeInsets.only(
+                    bottom: 40 + MediaQuery.paddingOf(context).bottom),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SizedBox(
+                    SizedBox(
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation(Colors.white70),
+                        strokeCap: StrokeCap.round,
+                        backgroundColor: Colors.white.withValues(alpha: 0.25),
+                        valueColor: AlwaysStoppedAnimation(
+                            Colors.white.withValues(alpha: 0.75)),
                       ),
                     ),
                     const SizedBox(height: 14),
-                    Text('© 2026 Wintek Corp.',
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.55))),
+                    const Text('© 2026 Wintek Corp.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF8A97A8))),
                   ],
                 ),
               ),
