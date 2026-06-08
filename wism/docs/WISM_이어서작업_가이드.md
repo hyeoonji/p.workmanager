@@ -27,7 +27,12 @@ git checkout v_flutter
 flutter pub get
 ```
 
-### 백엔드 (`3.wism_server`) — 아래 3·4 참고로 전송/실행
+### 백엔드 (`3.wism_server`) — **별도 GitHub 레포에서 받기** (필수!)
+```bash
+git clone -b test https://github.com/Hyeoonji/P.WorkManager-Server.git
+cd P.WorkManager-Server
+```
+> ⚠️ 백엔드는 **앱과 다른 레포**(`P.WorkManager-Server`)에 있음. **코드는 `test` 브랜치**(master는 비어 있음). DB(`prisma/data/wism.db`)도 포함돼 데이터가 함께 옴. 이후 §3대로 실행.
 
 ---
 
@@ -62,24 +67,12 @@ DEV_LOGIN_PASSWORD=0000
 
 **개발 로그인:** 사번 `00000`~`00020` / 비번 `0000` (00000 이태경 대표이사 등 관리자 21명)
 
-## 4. 백엔드 코드 전송 (git 아직 미연동)
-`3.wism_server`는 아직 원격이 없음. 둘 중 하나:
-
-**(A) 새 GitHub 레포 만들어 푸시** (권장)
-```bash
-cd 3.wism_server
-git init
-git add -A
-git commit -m "WISM backend (NestJS+Prisma+SQLite)"
-git branch -M main
-git remote add origin <GitHub에서 만든 새 레포 URL>
-git push -u origin main
-```
-> `.gitignore`에 `node_modules/`, `.env` 제외. **DB(`prisma/data/wism.db`)는 git에 포함** → 새 PC는 pull/clone만 하면 **데이터(공지·테스트 글까지) 그대로** 옴. `.env`만 재생성하고 `npm install` 후 바로 실행. (임시 저널 `*.db-journal/-wal`만 제외)
-
-**(B) 폴더 복사** (USB/클라우드) — `node_modules` 빼고 복사(`data/wism.db` 포함) 후 `npm install`.
-
-> 참고: DB가 git에 있어 데이터가 함께 이동함. 데이터를 초기 상태로 되돌리려면 `prisma/data/wism.db` 삭제 후 `npx prisma db push && npx prisma db seed`.
+## 4. 백엔드 레포 (이미 GitHub에 올라가 있음)
+- **레포:** https://github.com/Hyeoonji/P.WorkManager-Server
+- **브랜치:** 코드는 **`test`**, `master`는 비어 있음 → 받을 때 `git clone -b test ...` (§1 참고)
+- `.gitignore`: `node_modules/`, `.env` 제외. **DB(`prisma/data/wism.db`)는 git에 포함** → clone만 하면 **데이터(공지·테스트 글)까지** 옴. `.env`만 만들고 `npm install` 후 바로 실행.
+- 데이터를 초기화하려면 `prisma/data/wism.db` 삭제 후 `npx prisma db push && npx prisma db seed`.
+- 새 PC에서 수정 후 올릴 때: `git add -A && git commit -m "..." && git push origin test`
 
 ---
 
