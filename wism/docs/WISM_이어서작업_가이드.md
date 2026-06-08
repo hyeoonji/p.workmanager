@@ -42,8 +42,10 @@ cd 3.wism_server
 npm install
 # 아래 .env 파일을 3.wism_server/ 에 생성 (git에 안 올라감)
 npx prisma generate
-npx prisma db push      # SQLite 테이블 생성 → prisma/data/wism.db
-npx prisma db seed      # 관리자21·사업10·공지12 시드
+# ↓ DB(prisma/data/wism.db)는 git에 포함돼 함께 받아짐(데이터 그대로).
+#   DB가 없는 경우(폴더만 받았을 때)에만 아래 두 줄 실행:
+# npx prisma db push    # 테이블 생성
+# npx prisma db seed    # 관리자21·사업10·공지12 시드
 npm run start:dev       # 서버 기동: http://localhost:8080/api/v1
 ```
 
@@ -73,11 +75,11 @@ git branch -M main
 git remote add origin <GitHub에서 만든 새 레포 URL>
 git push -u origin main
 ```
-> `.gitignore`에 `node_modules/`, `.env`, `data/*.db` 제외돼 있음. 새 PC에선 `.env` 재생성 + `prisma db push/seed` 하면 됨.
+> `.gitignore`에 `node_modules/`, `.env` 제외. **DB(`prisma/data/wism.db`)는 git에 포함** → 새 PC는 pull/clone만 하면 **데이터(공지·테스트 글까지) 그대로** 옴. `.env`만 재생성하고 `npm install` 후 바로 실행. (임시 저널 `*.db-journal/-wal`만 제외)
 
-**(B) 폴더 복사** (USB/클라우드) — `node_modules`, `data/*.db` 빼고 복사 후 `npm install`.
+**(B) 폴더 복사** (USB/클라우드) — `node_modules` 빼고 복사(`data/wism.db` 포함) 후 `npm install`.
 
-> **데이터(wism.db)는 git/복사 대상 아님** → 새 PC는 seed로 재생성. 기존에 앱에서 쓴 글까지 옮기려면 `prisma/data/wism.db` 파일을 직접 복사.
+> 참고: DB가 git에 있어 데이터가 함께 이동함. 데이터를 초기 상태로 되돌리려면 `prisma/data/wism.db` 삭제 후 `npx prisma db push && npx prisma db seed`.
 
 ---
 
