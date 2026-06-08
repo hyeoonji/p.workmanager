@@ -95,11 +95,14 @@ USE_MOCK_AUTH=false
   New-NetFirewallRule -DisplayName "WISM Dev 8080" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8080 -Profile Private,Domain
   ```
   + Wi-Fi 네트워크를 "개인(Private)"으로.
-- **외부망(셀룰러 등)**: Cloudflare 터널
+- **외부망(셀룰러 등)**: Cloudflare 터널 — *git에 올릴 것 없음. 새 PC에서 설치 후 실행만.*
   ```bash
-  cloudflared tunnel --url http://localhost:8080
+  winget install --id Cloudflare.cloudflared -e     # 최초 1회 설치
+  cloudflared tunnel --url http://localhost:8080    # 서버 켜둔 상태에서 실행
   ```
-  출력되는 `https://xxxx.trycloudflare.com` 주소를 `.env`의 API_BASE_URL에 `/api/v1` 붙여 사용. (재시작 시 주소 변경 → .env 교체 후 재빌드)
+  출력되는 `https://xxxx.trycloudflare.com` 주소를 `.env`의 API_BASE_URL에 `/api/v1` 붙여 사용.
+  ⚠️ **퀵터널 주소는 실행마다 랜덤**으로 바뀜 → 그때 .env 교체 후 `flutter build apk --release`. 같은 와이파이면 터널 없이 LAN IP만으로 충분.
+  (고정 주소가 필요하면 ngrok 무료 도메인 / Cloudflare named tunnel — 계정·자격증명 필요, git에 올리지 말 것)
 - `.env` 변경 후 APK 재빌드: `flutter build apk --release`
 - 안드로이드: HTTP(평문) 허용·INTERNET 권한 이미 `AndroidManifest.xml`에 적용됨.
 
