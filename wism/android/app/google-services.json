@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "764892340535",
+    "project_id": "wism-ea32d",
+    "storage_bucket": "wism-ea32d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:764892340535:android:c43b9049bc71cb1cfffab2",
+        "android_client_info": {
+          "package_name": "com.wintek.wism"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBBkeyXOFo954Py3VJsm5Q6qMUYCKTuZs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

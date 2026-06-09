@@ -10,7 +10,14 @@
 - **외부 접속**: Cloudflare 퀵터널(임시 주소).
 
 ## 남은 작업 (TODO)
-1. **③ FCM 푸시** — Firebase 콘솔 선행: ① Firebase 프로젝트 생성 → ② Android 앱 등록(applicationId는 `android/app/build.gradle(.kts)`의 `applicationId` 확인) → ③ `google-services.json` 받아 `android/app/`에 → ④ 서비스 계정 비공개 키 발급. 이후 **서버** firebase-admin + `DevicesModule`(`POST /devices`, `DELETE /devices/{token}`), **앱** `firebase_messaging`(권한·토큰등록·수신·딥링크).
+1. **③ FCM 푸시 — ✅✅ 완료 + 실기기 검증 완료 (2026-06-09)**
+   - 실기기(SM-G991N)에서 로그인→토큰 등록(`POST /devices`)→긴급 메모 발송→**상단바 푸시 수신 확인 완료**.
+   - 외부 접속은 Cloudflare 퀵터널(`cloudflared.exe tunnel --url http://localhost:8080`)로 검증 — 같은 와이파이/방화벽 불필요. ⚠️ 터널 주소는 실행마다 바뀌니 바뀌면 `wism/.env`의 `API_BASE_URL` 교체 후 `flutter build apk --release` 재빌드.
+   - ⚠️ 포그라운드(앱 켜둔 상태) 수신은 현재 로그만 — 시스템 알림 표시는 앱이 백그라운드/종료일 때. 포그라운드 표시·딥링크는 추후 개선 항목.
+   - **Firebase 프로젝트**: `wism-ea32d` (Android 패키지 `com.wintek.wism`).
+   - **서버**: `src/devices/` 모듈 — `POST /devices`(토큰 업서트), `DELETE /devices/{fcmToken}`(204). `PushService`(firebase-admin)가 댓글·멘션·긴급 알림 생성 지점(`memos.service.ts`)에서 자동 발송. 서비스계정 키는 `secrets/firebase-service-account.json`(gitignore), `.env`의 `FIREBASE_SERVICE_ACCOUNT`로 연결 → 서버 기동 시 "FCM 푸시 활성화됨" 로그 확인. **키 없으면 자동 no-op**(알림창은 정상).
+   - **앱**: `firebase_core`+`firebase_messaging`. `android/app/google-services.json` 배치, gradle 플러그인(`com.google.gms.google-services`) 적용. `lib/core/push/push_service.dart`가 권한요청+토큰등록(`POST /devices`)+수신, 로그인/로그아웃 시 `auth_controller.dart`에서 등록/해제. `main.dart`에서 `Firebase.initializeApp()`+백그라운드 핸들러. 매니페스트 `POST_NOTIFICATIONS` 권한 추가됨.
+   - ⬜ **남은 것**: 실기기/에뮬레이터에서 로그인 → 토큰 등록 확인 → 다른 계정이 댓글/멘션/긴급 메모 작성 → 푸시 수신 확인. (포그라운드 표시는 현재 로그만 — 필요 시 `flutter_local_notifications`로 표시. 알림 탭 시 딥링크 이동도 추후.)
 2. **첨부문서** — `docs/WISM_API_명세서.md` 6장(멀티파트 업로드/다운로드/삭제, 10MB·메모당 3개·허용형식) 서버 구현 + 앱 첨부 UI(M2에서 보류했던 부분).
 3. (선택) **고정 공개주소** — ngrok 무료 고정 도메인 또는 Cloudflare named tunnel(+도메인).
 4. (선택) **운영 전환** — Prisma `provider`를 `mysql`로, 사내 서버/DB 연동.
@@ -108,6 +115,7 @@ USE_MOCK_AUTH=false
 - 댓글: `GET·POST /memos/{id}/comments`, `PUT·DELETE /comments/{id}`
 - 알림: `GET /notifications`, `/notifications/unread-count`, `PUT /notifications/{id}/read`, `/notifications/read-all`
 - 검색: `GET /users?q=`, `GET /projects?q=`
+- 디바이스(FCM): `POST /devices`(토큰 등록/업서트), `DELETE /devices/{fcmToken}`(해제) — `src/devices/`
 - 날짜는 KST 벽시계 ISO(offset 없음)로 응답 — `src/common/serialize.ts`
 
 ## 7. 참고 문서 (repo `docs/`)

@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- 네트워크 통신 (실서버 연동) -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- FCM 푸시 알림 (Android 13+ 런타임 요청 필요) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="WISM"
         android:name="${applicationName}"

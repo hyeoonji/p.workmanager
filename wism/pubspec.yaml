@@ -50,6 +50,9 @@ dependencies:
   intl: ^0.20.2
   flutter_dotenv: ^6.0.1
   lucide_icons_flutter: ^3.1.14+2
+  # FCM 푸시
+  firebase_core: ^4.1.1
+  firebase_messaging: ^16.0.1
 
 dev_dependencies:
   flutter_test:

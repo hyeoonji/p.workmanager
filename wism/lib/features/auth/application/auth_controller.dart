@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/push/push_service.dart';
 import '../data/auth_providers.dart';
 import '../data/models/app_user.dart';
 
@@ -34,9 +35,13 @@ class AuthController extends Notifier<AuthState> {
       final pending = ref.read(authRepositoryProvider).currentUser();
       await Future.delayed(const Duration(milliseconds: 1300));
       final user = await pending;
-      state = user != null
-          ? AuthState.authenticated(user)
-          : const AuthState.unauthenticated();
+      if (user != null) {
+        state = AuthState.authenticated(user);
+        // 자동로그인 성공 시에도 토큰 갱신 등록 (fire-and-forget)
+        ref.read(pushServiceProvider).registerToken();
+      } else {
+        state = const AuthState.unauthenticated();
+      }
     } catch (_) {
       state = const AuthState.unauthenticated();
     }
@@ -47,9 +52,13 @@ class AuthController extends Notifier<AuthState> {
     final user =
         await ref.read(authRepositoryProvider).login(employeeNo, password);
     state = AuthState.authenticated(user);
+    // FCM 토큰 등록 (권한 요청 포함). 실패해도 로그인엔 영향 없음.
+    ref.read(pushServiceProvider).registerToken();
   }
 
   Future<void> logout() async {
+    // 서버에서 이 기기 토큰 해제 (로그아웃 API 전에)
+    await ref.read(pushServiceProvider).unregister();
     await ref.read(authRepositoryProvider).logout();
     state = const AuthState.unauthenticated();
   }
