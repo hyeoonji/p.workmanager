@@ -24,6 +24,14 @@
 
 ---
 
+## 0.1 인수인계 번들 (2026-06-09) — clone만 하면 거의 다 옴
+다른 PC 이동 편의를 위해 **원래 ignore되던 것들도 git에 포함**시켜 둠. ⚠️ **두 레포 모두 비공개 전제** (공개 시 Firebase 서비스계정 키 즉시 재발급).
+- **앱**: `wism/.env`, `wism/android/app/google-services.json`, `app-release.apk`(git-lfs `*.apk`)
+- **서버**: `.env`, `secrets/firebase-service-account.json`(서비스계정 키), `prisma/data/wism.db`
+- **유일한 예외**: `cloudflared.exe`는 레포 밖이라 미포함 → 새 PC에서 재다운로드:
+  `Invoke-WebRequest https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile cloudflared.exe`
+- 앱은 git-lfs 필요: clone 후 `git lfs pull` (APK 받기).
+
 ## 1. 코드 받기 (새 PC)
 
 ### 앱 (이미 GitHub에 있음)
@@ -31,6 +39,7 @@
 git clone https://github.com/Hyeoonji/P.WorkManager.git
 cd P.WorkManager        # (= 2.wism_flutter/wism 내용)
 git checkout v_flutter
+git lfs pull            # APK 등 LFS 파일 받기
 flutter pub get
 ```
 
