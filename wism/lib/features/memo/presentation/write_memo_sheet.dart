@@ -7,13 +7,24 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../application/memo_providers.dart';
 import '../data/models/attachment.dart';
-import '../data/models/department.dart';
 import '../data/models/memo.dart';
 import '../data/models/memo_project.dart';
 import '../data/models/user_ref.dart';
 import '../domain/memo_draft.dart';
 import 'widgets/attachment_widgets.dart';
 import 'widgets/wism_date_picker.dart';
+
+/// 직급 정렬 우선순위 (낮을수록 높은 직급 → 먼저 노출). 미등록 직급은 맨 뒤.
+/// 현재 DB 실제 값: 대표이사·본부장·실장·팀장. 부사장~이사는 향후 대비 포함.
+const _positionOrder = <String>[
+  '대표이사', '부사장', '전무', '상무', '이사', '본부장', '실장', '팀장',
+];
+
+int _positionRank(String? position) {
+  if (position == null || position.isEmpty) return _positionOrder.length;
+  final i = _positionOrder.indexOf(position);
+  return i < 0 ? _positionOrder.length : i;
+}
 
 /// 메모 작성/수정 — 디자인(MemoForm) 기반 중앙 모달. 성공 시 true 반환.
 Future<bool?> showWriteMemoSheet(BuildContext context, {Memo? edit}) {
@@ -395,7 +406,7 @@ class _WriteMemoDialogState extends ConsumerState<_WriteMemoDialog> {
     );
   }
 
-  // ── 확인자: 인라인 검색 드롭다운 (부서 단위 / 개인) ──
+  // ── 확인자: 인라인 검색 드롭다운 (이름·부서명 검색 → 개인 결과, 직급 순) ──
   Widget _assigneeField() {
     final showRequiredHint = _needsConfirmer && _assignees.isEmpty;
     final q = _assigneeQuery.text.trim();
@@ -460,20 +471,24 @@ class _WriteMemoDialogState extends ConsumerState<_WriteMemoDialog> {
   }
 
   Widget _assigneePanel(String q) {
-    final deptList = ref.watch(departmentsProvider).maybeWhen(
-          data: (all) =>
-              q.isEmpty ? all : all.where((d) => d.name.contains(q)).toList(),
-          orElse: () => <Department>[],
-        );
     final userList = q.isEmpty
         ? <UserRef>[]
         : ref.watch(userSearchProvider(q)).maybeWhen(
-              data: (all) => all
-                  .where((u) => !_assignees.any((e) => e.id == u.id))
-                  .toList(),
+              data: (all) {
+                final filtered = all
+                    .where((u) => !_assignees.any((e) => e.id == u.id))
+                    .toList()
+                  // 직급 순(높은 직급 먼저), 동급은 이름순
+                  ..sort((a, b) {
+                    final r = _positionRank(a.position)
+                        .compareTo(_positionRank(b.position));
+                    return r != 0 ? r : a.name.compareTo(b.name);
+                  });
+                return filtered;
+              },
               orElse: () => <UserRef>[],
             );
-    if (deptList.isEmpty && userList.isEmpty) {
+    if (userList.isEmpty) {
       return _panelBox(
         child: _panelEmpty(q.isEmpty ? '이름 또는 부서명을 입력하세요' : '검색 결과가 없습니다'),
       );
@@ -482,45 +497,19 @@ class _WriteMemoDialogState extends ConsumerState<_WriteMemoDialog> {
       child: ListView(
         shrinkWrap: true,
         padding: const EdgeInsets.symmetric(vertical: 4),
-        children: [
-          if (deptList.isNotEmpty) ...[
-            _panelHeader('부서 단위 추가'),
-            ...deptList.map((d) {
-              final allAdded =
-                  d.members.every((m) => _assignees.any((e) => e.id == m.id));
-              return Opacity(
-                opacity: allAdded ? 0.4 : 1,
-                child: _panelTile(
-                  leading: _miniIcon(LucideIcons.users),
-                  title: d.name,
-                  trailing: '${d.members.length}명',
-                  onTap: allAdded
-                      ? null
-                      : () => setState(() {
-                            for (final m in d.members) {
-                              if (!_assignees.any((e) => e.id == m.id)) {
-                                _assignees.add(m);
-                              }
-                            }
-                            _assigneeQuery.clear();
-                          }),
-                ),
-              );
-            }),
-          ],
-          if (userList.isNotEmpty) ...[
-            _panelHeader('개인 추가'),
-            ...userList.map((u) => _panelTile(
+        children: userList
+            .map((u) => _panelTile(
                   leading: _miniAvatar(u.name.characters.first),
-                  title: u.name,
+                  title: (u.position == null || u.position!.isEmpty)
+                      ? u.name
+                      : '${u.name} ${u.position}',
                   subtitle: u.dept,
                   onTap: () => setState(() {
                     _assignees.add(u);
                     _assigneeQuery.clear();
                   }),
-                )),
-          ],
-        ],
+                ))
+            .toList(),
       ),
     );
   }
@@ -570,16 +559,6 @@ class _WriteMemoDialogState extends ConsumerState<_WriteMemoDialog> {
         ),
         clipBehavior: Clip.antiAlias,
         child: child,
-      );
-
-  Widget _panelHeader(String t) => Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-        child: Text(t,
-            style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textMuted,
-                letterSpacing: 0.4)),
       );
 
   Widget _panelTile({

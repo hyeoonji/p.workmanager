@@ -230,7 +230,7 @@ class MockMemoRepository implements MemoRepository {
     final q = query.trim();
     if (q.isEmpty) return const [];
     return mockUsers
-        .where((u) => u.name.contains(q))
+        .where((u) => u.name.contains(q) || (u.dept?.contains(q) ?? false))
         .take(20)
         .map((u) => UserRef(
               id: u.id,
