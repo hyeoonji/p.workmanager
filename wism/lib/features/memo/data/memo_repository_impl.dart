@@ -2,7 +2,9 @@ import 'package:dio/dio.dart';
 
 import '../domain/memo_draft.dart';
 import '../domain/memo_repository.dart';
+import 'models/attachment.dart';
 import 'models/comment.dart';
+import 'models/department.dart';
 import 'models/memo.dart';
 import 'models/memo_project.dart';
 import 'models/user_ref.dart';
@@ -92,9 +94,44 @@ class MemoRepositoryImpl implements MemoRepository {
   }
 
   @override
+  Future<Attachment> uploadAttachment(
+      int memoId, String filePath, String fileName) async {
+    final form = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: fileName),
+    });
+    final res = await _dio.post<Map<String, dynamic>>(
+      '/memos/$memoId/attachments',
+      data: form,
+    );
+    return Attachment.fromJson(res.data!);
+  }
+
+  @override
+  Future<void> deleteAttachment(int attachmentId) async {
+    await _dio.delete('/attachments/$attachmentId');
+  }
+
+  @override
+  Future<List<int>> downloadAttachment(int attachmentId) async {
+    final res = await _dio.get<List<int>>(
+      '/attachments/$attachmentId/download',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return res.data!;
+  }
+
+  @override
   Future<List<UserRef>> searchUsers(String query) async {
     final res = await _dio.get<List<dynamic>>('/users', queryParameters: {'q': query});
     return res.data!.map((e) => UserRef.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Future<List<Department>> listDepartments() async {
+    final res = await _dio.get<List<dynamic>>('/departments');
+    return res.data!
+        .map((e) => Department.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override

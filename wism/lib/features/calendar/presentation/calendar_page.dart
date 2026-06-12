@@ -313,7 +313,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                                   height: 1.4)),
                         ),
                         const SizedBox(width: 8),
-                        // 긴급 + 카테고리 배지를 한 줄로
+                        // 긴급 + 카테고리 배지를 한 줄로 (의도적 가로 나열 — 세로면 좌측 바가 길어짐)
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

@@ -17,7 +17,9 @@ mixin _$Memo {
 
  int get id; String get title; String? get content; String get priority;// 긴급 | 일반
  String get category;// 일정 | 이슈 | 결정사항 | 회의록 | 기타
- MemoProject? get project; DateTime? get scheduledDate; UserRef get author; List<Assignee> get assignees; DateTime get createdAt; int get readBy; int get totalReaders; int get viewCount; int get commentCount; bool get bookmarked; bool get isRead; List<Comment> get comments;
+ MemoProject? get project; DateTime? get scheduledDate; UserRef get author; List<Assignee> get assignees; DateTime get createdAt; int get readBy; int get totalReaders; int get viewCount; int get commentCount; bool get bookmarked; bool get isRead; bool get isConfirmer;// 현재 사용자가 이 메모의 확인자인지
+ bool get confirmedByMe;// 현재 사용자가 확인(읽음) 완료했는지
+ List<Comment> get comments; List<Attachment> get attachments;
 /// Create a copy of Memo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,16 +32,16 @@ $MemoCopyWith<Memo> get copyWith => _$MemoCopyWithImpl<Memo>(this as Memo, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Memo&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.category, category) || other.category == category)&&(identical(other.project, project) || other.project == project)&&(identical(other.scheduledDate, scheduledDate) || other.scheduledDate == scheduledDate)&&(identical(other.author, author) || other.author == author)&&const DeepCollectionEquality().equals(other.assignees, assignees)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.readBy, readBy) || other.readBy == readBy)&&(identical(other.totalReaders, totalReaders) || other.totalReaders == totalReaders)&&(identical(other.viewCount, viewCount) || other.viewCount == viewCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.bookmarked, bookmarked) || other.bookmarked == bookmarked)&&(identical(other.isRead, isRead) || other.isRead == isRead)&&const DeepCollectionEquality().equals(other.comments, comments));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Memo&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.category, category) || other.category == category)&&(identical(other.project, project) || other.project == project)&&(identical(other.scheduledDate, scheduledDate) || other.scheduledDate == scheduledDate)&&(identical(other.author, author) || other.author == author)&&const DeepCollectionEquality().equals(other.assignees, assignees)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.readBy, readBy) || other.readBy == readBy)&&(identical(other.totalReaders, totalReaders) || other.totalReaders == totalReaders)&&(identical(other.viewCount, viewCount) || other.viewCount == viewCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.bookmarked, bookmarked) || other.bookmarked == bookmarked)&&(identical(other.isRead, isRead) || other.isRead == isRead)&&(identical(other.isConfirmer, isConfirmer) || other.isConfirmer == isConfirmer)&&(identical(other.confirmedByMe, confirmedByMe) || other.confirmedByMe == confirmedByMe)&&const DeepCollectionEquality().equals(other.comments, comments)&&const DeepCollectionEquality().equals(other.attachments, attachments));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,content,priority,category,project,scheduledDate,author,const DeepCollectionEquality().hash(assignees),createdAt,readBy,totalReaders,viewCount,commentCount,bookmarked,isRead,const DeepCollectionEquality().hash(comments));
+int get hashCode => Object.hashAll([runtimeType,id,title,content,priority,category,project,scheduledDate,author,const DeepCollectionEquality().hash(assignees),createdAt,readBy,totalReaders,viewCount,commentCount,bookmarked,isRead,isConfirmer,confirmedByMe,const DeepCollectionEquality().hash(comments),const DeepCollectionEquality().hash(attachments)]);
 
 @override
 String toString() {
-  return 'Memo(id: $id, title: $title, content: $content, priority: $priority, category: $category, project: $project, scheduledDate: $scheduledDate, author: $author, assignees: $assignees, createdAt: $createdAt, readBy: $readBy, totalReaders: $totalReaders, viewCount: $viewCount, commentCount: $commentCount, bookmarked: $bookmarked, isRead: $isRead, comments: $comments)';
+  return 'Memo(id: $id, title: $title, content: $content, priority: $priority, category: $category, project: $project, scheduledDate: $scheduledDate, author: $author, assignees: $assignees, createdAt: $createdAt, readBy: $readBy, totalReaders: $totalReaders, viewCount: $viewCount, commentCount: $commentCount, bookmarked: $bookmarked, isRead: $isRead, isConfirmer: $isConfirmer, confirmedByMe: $confirmedByMe, comments: $comments, attachments: $attachments)';
 }
 
 
@@ -50,7 +52,7 @@ abstract mixin class $MemoCopyWith<$Res>  {
   factory $MemoCopyWith(Memo value, $Res Function(Memo) _then) = _$MemoCopyWithImpl;
 @useResult
 $Res call({
- int id, String title, String? content, String priority, String category, MemoProject? project, DateTime? scheduledDate, UserRef author, List<Assignee> assignees, DateTime createdAt, int readBy, int totalReaders, int viewCount, int commentCount, bool bookmarked, bool isRead, List<Comment> comments
+ int id, String title, String? content, String priority, String category, MemoProject? project, DateTime? scheduledDate, UserRef author, List<Assignee> assignees, DateTime createdAt, int readBy, int totalReaders, int viewCount, int commentCount, bool bookmarked, bool isRead, bool isConfirmer, bool confirmedByMe, List<Comment> comments, List<Attachment> attachments
 });
 
 
@@ -67,7 +69,7 @@ class _$MemoCopyWithImpl<$Res>
 
 /// Create a copy of Memo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? content = freezed,Object? priority = null,Object? category = null,Object? project = freezed,Object? scheduledDate = freezed,Object? author = null,Object? assignees = null,Object? createdAt = null,Object? readBy = null,Object? totalReaders = null,Object? viewCount = null,Object? commentCount = null,Object? bookmarked = null,Object? isRead = null,Object? comments = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? content = freezed,Object? priority = null,Object? category = null,Object? project = freezed,Object? scheduledDate = freezed,Object? author = null,Object? assignees = null,Object? createdAt = null,Object? readBy = null,Object? totalReaders = null,Object? viewCount = null,Object? commentCount = null,Object? bookmarked = null,Object? isRead = null,Object? isConfirmer = null,Object? confirmedByMe = null,Object? comments = null,Object? attachments = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -85,8 +87,11 @@ as int,viewCount: null == viewCount ? _self.viewCount : viewCount // ignore: cas
 as int,commentCount: null == commentCount ? _self.commentCount : commentCount // ignore: cast_nullable_to_non_nullable
 as int,bookmarked: null == bookmarked ? _self.bookmarked : bookmarked // ignore: cast_nullable_to_non_nullable
 as bool,isRead: null == isRead ? _self.isRead : isRead // ignore: cast_nullable_to_non_nullable
+as bool,isConfirmer: null == isConfirmer ? _self.isConfirmer : isConfirmer // ignore: cast_nullable_to_non_nullable
+as bool,confirmedByMe: null == confirmedByMe ? _self.confirmedByMe : confirmedByMe // ignore: cast_nullable_to_non_nullable
 as bool,comments: null == comments ? _self.comments : comments // ignore: cast_nullable_to_non_nullable
-as List<Comment>,
+as List<Comment>,attachments: null == attachments ? _self.attachments : attachments // ignore: cast_nullable_to_non_nullable
+as List<Attachment>,
   ));
 }
 /// Create a copy of Memo
@@ -192,10 +197,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String title,  String? content,  String priority,  String category,  MemoProject? project,  DateTime? scheduledDate,  UserRef author,  List<Assignee> assignees,  DateTime createdAt,  int readBy,  int totalReaders,  int viewCount,  int commentCount,  bool bookmarked,  bool isRead,  List<Comment> comments)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String title,  String? content,  String priority,  String category,  MemoProject? project,  DateTime? scheduledDate,  UserRef author,  List<Assignee> assignees,  DateTime createdAt,  int readBy,  int totalReaders,  int viewCount,  int commentCount,  bool bookmarked,  bool isRead,  bool isConfirmer,  bool confirmedByMe,  List<Comment> comments,  List<Attachment> attachments)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Memo() when $default != null:
-return $default(_that.id,_that.title,_that.content,_that.priority,_that.category,_that.project,_that.scheduledDate,_that.author,_that.assignees,_that.createdAt,_that.readBy,_that.totalReaders,_that.viewCount,_that.commentCount,_that.bookmarked,_that.isRead,_that.comments);case _:
+return $default(_that.id,_that.title,_that.content,_that.priority,_that.category,_that.project,_that.scheduledDate,_that.author,_that.assignees,_that.createdAt,_that.readBy,_that.totalReaders,_that.viewCount,_that.commentCount,_that.bookmarked,_that.isRead,_that.isConfirmer,_that.confirmedByMe,_that.comments,_that.attachments);case _:
   return orElse();
 
 }
@@ -213,10 +218,10 @@ return $default(_that.id,_that.title,_that.content,_that.priority,_that.category
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String title,  String? content,  String priority,  String category,  MemoProject? project,  DateTime? scheduledDate,  UserRef author,  List<Assignee> assignees,  DateTime createdAt,  int readBy,  int totalReaders,  int viewCount,  int commentCount,  bool bookmarked,  bool isRead,  List<Comment> comments)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String title,  String? content,  String priority,  String category,  MemoProject? project,  DateTime? scheduledDate,  UserRef author,  List<Assignee> assignees,  DateTime createdAt,  int readBy,  int totalReaders,  int viewCount,  int commentCount,  bool bookmarked,  bool isRead,  bool isConfirmer,  bool confirmedByMe,  List<Comment> comments,  List<Attachment> attachments)  $default,) {final _that = this;
 switch (_that) {
 case _Memo():
-return $default(_that.id,_that.title,_that.content,_that.priority,_that.category,_that.project,_that.scheduledDate,_that.author,_that.assignees,_that.createdAt,_that.readBy,_that.totalReaders,_that.viewCount,_that.commentCount,_that.bookmarked,_that.isRead,_that.comments);case _:
+return $default(_that.id,_that.title,_that.content,_that.priority,_that.category,_that.project,_that.scheduledDate,_that.author,_that.assignees,_that.createdAt,_that.readBy,_that.totalReaders,_that.viewCount,_that.commentCount,_that.bookmarked,_that.isRead,_that.isConfirmer,_that.confirmedByMe,_that.comments,_that.attachments);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -233,10 +238,10 @@ return $default(_that.id,_that.title,_that.content,_that.priority,_that.category
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String title,  String? content,  String priority,  String category,  MemoProject? project,  DateTime? scheduledDate,  UserRef author,  List<Assignee> assignees,  DateTime createdAt,  int readBy,  int totalReaders,  int viewCount,  int commentCount,  bool bookmarked,  bool isRead,  List<Comment> comments)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String title,  String? content,  String priority,  String category,  MemoProject? project,  DateTime? scheduledDate,  UserRef author,  List<Assignee> assignees,  DateTime createdAt,  int readBy,  int totalReaders,  int viewCount,  int commentCount,  bool bookmarked,  bool isRead,  bool isConfirmer,  bool confirmedByMe,  List<Comment> comments,  List<Attachment> attachments)?  $default,) {final _that = this;
 switch (_that) {
 case _Memo() when $default != null:
-return $default(_that.id,_that.title,_that.content,_that.priority,_that.category,_that.project,_that.scheduledDate,_that.author,_that.assignees,_that.createdAt,_that.readBy,_that.totalReaders,_that.viewCount,_that.commentCount,_that.bookmarked,_that.isRead,_that.comments);case _:
+return $default(_that.id,_that.title,_that.content,_that.priority,_that.category,_that.project,_that.scheduledDate,_that.author,_that.assignees,_that.createdAt,_that.readBy,_that.totalReaders,_that.viewCount,_that.commentCount,_that.bookmarked,_that.isRead,_that.isConfirmer,_that.confirmedByMe,_that.comments,_that.attachments);case _:
   return null;
 
 }
@@ -248,7 +253,7 @@ return $default(_that.id,_that.title,_that.content,_that.priority,_that.category
 @JsonSerializable()
 
 class _Memo implements Memo {
-  const _Memo({required this.id, required this.title, this.content, this.priority = '일반', this.category = '기타', this.project, this.scheduledDate, required this.author, final  List<Assignee> assignees = const <Assignee>[], required this.createdAt, this.readBy = 0, this.totalReaders = 0, this.viewCount = 0, this.commentCount = 0, this.bookmarked = false, this.isRead = false, final  List<Comment> comments = const <Comment>[]}): _assignees = assignees,_comments = comments;
+  const _Memo({required this.id, required this.title, this.content, this.priority = '일반', this.category = '기타', this.project, this.scheduledDate, required this.author, final  List<Assignee> assignees = const <Assignee>[], required this.createdAt, this.readBy = 0, this.totalReaders = 0, this.viewCount = 0, this.commentCount = 0, this.bookmarked = false, this.isRead = false, this.isConfirmer = false, this.confirmedByMe = false, final  List<Comment> comments = const <Comment>[], final  List<Attachment> attachments = const <Attachment>[]}): _assignees = assignees,_comments = comments,_attachments = attachments;
   factory _Memo.fromJson(Map<String, dynamic> json) => _$MemoFromJson(json);
 
 @override final  int id;
@@ -275,11 +280,23 @@ class _Memo implements Memo {
 @override@JsonKey() final  int commentCount;
 @override@JsonKey() final  bool bookmarked;
 @override@JsonKey() final  bool isRead;
+@override@JsonKey() final  bool isConfirmer;
+// 현재 사용자가 이 메모의 확인자인지
+@override@JsonKey() final  bool confirmedByMe;
+// 현재 사용자가 확인(읽음) 완료했는지
  final  List<Comment> _comments;
+// 현재 사용자가 확인(읽음) 완료했는지
 @override@JsonKey() List<Comment> get comments {
   if (_comments is EqualUnmodifiableListView) return _comments;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_comments);
+}
+
+ final  List<Attachment> _attachments;
+@override@JsonKey() List<Attachment> get attachments {
+  if (_attachments is EqualUnmodifiableListView) return _attachments;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_attachments);
 }
 
 
@@ -296,16 +313,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Memo&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.category, category) || other.category == category)&&(identical(other.project, project) || other.project == project)&&(identical(other.scheduledDate, scheduledDate) || other.scheduledDate == scheduledDate)&&(identical(other.author, author) || other.author == author)&&const DeepCollectionEquality().equals(other._assignees, _assignees)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.readBy, readBy) || other.readBy == readBy)&&(identical(other.totalReaders, totalReaders) || other.totalReaders == totalReaders)&&(identical(other.viewCount, viewCount) || other.viewCount == viewCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.bookmarked, bookmarked) || other.bookmarked == bookmarked)&&(identical(other.isRead, isRead) || other.isRead == isRead)&&const DeepCollectionEquality().equals(other._comments, _comments));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Memo&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.content, content) || other.content == content)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.category, category) || other.category == category)&&(identical(other.project, project) || other.project == project)&&(identical(other.scheduledDate, scheduledDate) || other.scheduledDate == scheduledDate)&&(identical(other.author, author) || other.author == author)&&const DeepCollectionEquality().equals(other._assignees, _assignees)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.readBy, readBy) || other.readBy == readBy)&&(identical(other.totalReaders, totalReaders) || other.totalReaders == totalReaders)&&(identical(other.viewCount, viewCount) || other.viewCount == viewCount)&&(identical(other.commentCount, commentCount) || other.commentCount == commentCount)&&(identical(other.bookmarked, bookmarked) || other.bookmarked == bookmarked)&&(identical(other.isRead, isRead) || other.isRead == isRead)&&(identical(other.isConfirmer, isConfirmer) || other.isConfirmer == isConfirmer)&&(identical(other.confirmedByMe, confirmedByMe) || other.confirmedByMe == confirmedByMe)&&const DeepCollectionEquality().equals(other._comments, _comments)&&const DeepCollectionEquality().equals(other._attachments, _attachments));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,content,priority,category,project,scheduledDate,author,const DeepCollectionEquality().hash(_assignees),createdAt,readBy,totalReaders,viewCount,commentCount,bookmarked,isRead,const DeepCollectionEquality().hash(_comments));
+int get hashCode => Object.hashAll([runtimeType,id,title,content,priority,category,project,scheduledDate,author,const DeepCollectionEquality().hash(_assignees),createdAt,readBy,totalReaders,viewCount,commentCount,bookmarked,isRead,isConfirmer,confirmedByMe,const DeepCollectionEquality().hash(_comments),const DeepCollectionEquality().hash(_attachments)]);
 
 @override
 String toString() {
-  return 'Memo(id: $id, title: $title, content: $content, priority: $priority, category: $category, project: $project, scheduledDate: $scheduledDate, author: $author, assignees: $assignees, createdAt: $createdAt, readBy: $readBy, totalReaders: $totalReaders, viewCount: $viewCount, commentCount: $commentCount, bookmarked: $bookmarked, isRead: $isRead, comments: $comments)';
+  return 'Memo(id: $id, title: $title, content: $content, priority: $priority, category: $category, project: $project, scheduledDate: $scheduledDate, author: $author, assignees: $assignees, createdAt: $createdAt, readBy: $readBy, totalReaders: $totalReaders, viewCount: $viewCount, commentCount: $commentCount, bookmarked: $bookmarked, isRead: $isRead, isConfirmer: $isConfirmer, confirmedByMe: $confirmedByMe, comments: $comments, attachments: $attachments)';
 }
 
 
@@ -316,7 +333,7 @@ abstract mixin class _$MemoCopyWith<$Res> implements $MemoCopyWith<$Res> {
   factory _$MemoCopyWith(_Memo value, $Res Function(_Memo) _then) = __$MemoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String title, String? content, String priority, String category, MemoProject? project, DateTime? scheduledDate, UserRef author, List<Assignee> assignees, DateTime createdAt, int readBy, int totalReaders, int viewCount, int commentCount, bool bookmarked, bool isRead, List<Comment> comments
+ int id, String title, String? content, String priority, String category, MemoProject? project, DateTime? scheduledDate, UserRef author, List<Assignee> assignees, DateTime createdAt, int readBy, int totalReaders, int viewCount, int commentCount, bool bookmarked, bool isRead, bool isConfirmer, bool confirmedByMe, List<Comment> comments, List<Attachment> attachments
 });
 
 
@@ -333,7 +350,7 @@ class __$MemoCopyWithImpl<$Res>
 
 /// Create a copy of Memo
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? content = freezed,Object? priority = null,Object? category = null,Object? project = freezed,Object? scheduledDate = freezed,Object? author = null,Object? assignees = null,Object? createdAt = null,Object? readBy = null,Object? totalReaders = null,Object? viewCount = null,Object? commentCount = null,Object? bookmarked = null,Object? isRead = null,Object? comments = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? content = freezed,Object? priority = null,Object? category = null,Object? project = freezed,Object? scheduledDate = freezed,Object? author = null,Object? assignees = null,Object? createdAt = null,Object? readBy = null,Object? totalReaders = null,Object? viewCount = null,Object? commentCount = null,Object? bookmarked = null,Object? isRead = null,Object? isConfirmer = null,Object? confirmedByMe = null,Object? comments = null,Object? attachments = null,}) {
   return _then(_Memo(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -351,8 +368,11 @@ as int,viewCount: null == viewCount ? _self.viewCount : viewCount // ignore: cas
 as int,commentCount: null == commentCount ? _self.commentCount : commentCount // ignore: cast_nullable_to_non_nullable
 as int,bookmarked: null == bookmarked ? _self.bookmarked : bookmarked // ignore: cast_nullable_to_non_nullable
 as bool,isRead: null == isRead ? _self.isRead : isRead // ignore: cast_nullable_to_non_nullable
+as bool,isConfirmer: null == isConfirmer ? _self.isConfirmer : isConfirmer // ignore: cast_nullable_to_non_nullable
+as bool,confirmedByMe: null == confirmedByMe ? _self.confirmedByMe : confirmedByMe // ignore: cast_nullable_to_non_nullable
 as bool,comments: null == comments ? _self._comments : comments // ignore: cast_nullable_to_non_nullable
-as List<Comment>,
+as List<Comment>,attachments: null == attachments ? _self._attachments : attachments // ignore: cast_nullable_to_non_nullable
+as List<Attachment>,
   ));
 }
 

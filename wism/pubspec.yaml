@@ -53,6 +53,8 @@ dependencies:
   # FCM 푸시
   firebase_core: ^4.1.1
   firebase_messaging: ^16.0.1
+  path_provider: ^2.1.5
+  open_filex: ^4.7.0
 
 dev_dependencies:
   flutter_test:

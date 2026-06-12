@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../core/theme/app_colors.dart';
+import '../features/memo/application/memo_providers.dart';
+import '../features/memo/domain/memo_repository.dart';
 
 /// 메인 셸 (P-02) — 디자인(MobileTabBar) 기반 하단 탭 5개.
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
   const MainShell({super.key, required this.navigationShell});
 
@@ -17,7 +20,13 @@ class MainShell extends StatelessWidget {
     (icon: LucideIcons.user, label: '프로필'),
   ];
 
-  void _onTap(int index) {
+  void _onTap(int index, WidgetRef ref) {
+    // 전체(1)/내메모(2) 탭을 누르면 해당 목록의 필터·정렬 초기화 (#6)
+    if (index == 1) {
+      ref.read(memoListResetProvider(MemoScope.all).notifier).state++;
+    } else if (index == 2) {
+      ref.read(memoListResetProvider(MemoScope.my).notifier).state++;
+    }
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
@@ -25,7 +34,7 @@ class MainShell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final current = navigationShell.currentIndex;
     return Scaffold(
       body: navigationShell,
@@ -55,7 +64,7 @@ class MainShell extends StatelessWidget {
                     selected ? AppColors.primary : AppColors.iconInactive;
                 return Expanded(
                   child: InkWell(
-                    onTap: () => _onTap(i),
+                    onTap: () => _onTap(i, ref),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

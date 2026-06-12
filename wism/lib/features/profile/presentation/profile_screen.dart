@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../auth/application/auth_controller.dart';
+import '../../help/presentation/help_screen.dart';
 import '../application/profile_providers.dart';
 import 'profile_edit_sheet.dart';
 
@@ -159,6 +160,20 @@ class ProfileScreen extends ConsumerWidget {
                   label: '버전 정보',
                   trailing: const Text('v1.0.0',
                       style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+                ),
+                _indentDivider(),
+                InkWell(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const HelpScreen()),
+                  ),
+                  child: _settingRow(
+                    iconBg: const Color(0xFFEBF3FB),
+                    iconColor: AppColors.primary,
+                    icon: LucideIcons.circleHelp,
+                    label: '도움말',
+                    trailing: const Icon(LucideIcons.chevronRight,
+                        size: 18, color: AppColors.textMuted),
+                  ),
                 ),
               ],
             ),

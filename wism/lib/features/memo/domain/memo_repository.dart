@@ -1,4 +1,6 @@
+import '../data/models/attachment.dart';
 import '../data/models/comment.dart';
+import '../data/models/department.dart';
 import '../data/models/memo.dart';
 import '../data/models/memo_project.dart';
 import '../data/models/user_ref.dart';
@@ -29,8 +31,21 @@ abstract class MemoRepository {
   Future<void> updateComment(int memoId, int commentId, String content);
   Future<void> deleteComment(int memoId, int commentId);
 
-  /// 담당자 태그 자동완성.
+  /// 첨부 업로드 (멀티파트). 성공 시 생성된 첨부.
+  Future<Attachment> uploadAttachment(
+      int memoId, String filePath, String fileName);
+
+  /// 첨부 삭제 (메모 작성자만).
+  Future<void> deleteAttachment(int attachmentId);
+
+  /// 첨부 다운로드 → 바이트.
+  Future<List<int>> downloadAttachment(int attachmentId);
+
+  /// 확인자 태그 자동완성.
   Future<List<UserRef>> searchUsers(String query);
+
+  /// 부서 목록 + 멤버 ('부서 단위 추가'용).
+  Future<List<Department>> listDepartments();
 
   /// 사업(프로젝트) 자동완성.
   Future<List<MemoProject>> searchProjects(String query);

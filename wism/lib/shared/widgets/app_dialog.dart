@@ -12,16 +12,16 @@ ButtonStyle _cancelStyle() => OutlinedButton.styleFrom(
       backgroundColor: AppColors.background,
       foregroundColor: AppColors.textSub,
       side: const BorderSide(color: AppColors.border),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      padding: const EdgeInsets.symmetric(vertical: 11),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      padding: const EdgeInsets.symmetric(vertical: 13),
       textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
     );
 
 /// 확정 버튼 (radius8) — 디자인 모달 공통.
 ButtonStyle _confirmStyle(Color? color) => FilledButton.styleFrom(
       backgroundColor: color ?? AppColors.primary,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      padding: const EdgeInsets.symmetric(vertical: 11),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      padding: const EdgeInsets.symmetric(vertical: 13),
       textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
     );
 

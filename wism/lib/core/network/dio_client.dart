@@ -6,6 +6,8 @@ import '../storage/token_storage.dart';
 import 'auth_interceptor.dart';
 
 /// 앱 공용 Dio 인스턴스.
+///
+/// baseUrl은 .env의 고정 서버 주소([Env.apiBaseUrl])를 사용한다.
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Assignee {
 
- int get userId; String get name;
+ int get userId; String get name; bool get confirmed;
 /// Create a copy of Assignee
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $AssigneeCopyWith<Assignee> get copyWith => _$AssigneeCopyWithImpl<Assignee>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Assignee&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.name, name) || other.name == name));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Assignee&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.name, name) || other.name == name)&&(identical(other.confirmed, confirmed) || other.confirmed == confirmed));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,userId,name);
+int get hashCode => Object.hash(runtimeType,userId,name,confirmed);
 
 @override
 String toString() {
-  return 'Assignee(userId: $userId, name: $name)';
+  return 'Assignee(userId: $userId, name: $name, confirmed: $confirmed)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $AssigneeCopyWith<$Res>  {
   factory $AssigneeCopyWith(Assignee value, $Res Function(Assignee) _then) = _$AssigneeCopyWithImpl;
 @useResult
 $Res call({
- int userId, String name
+ int userId, String name, bool confirmed
 });
 
 
@@ -65,11 +65,12 @@ class _$AssigneeCopyWithImpl<$Res>
 
 /// Create a copy of Assignee
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? userId = null,Object? name = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? userId = null,Object? name = null,Object? confirmed = null,}) {
   return _then(_self.copyWith(
 userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,
+as String,confirmed: null == confirmed ? _self.confirmed : confirmed // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -154,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int userId,  String name)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int userId,  String name,  bool confirmed)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Assignee() when $default != null:
-return $default(_that.userId,_that.name);case _:
+return $default(_that.userId,_that.name,_that.confirmed);case _:
   return orElse();
 
 }
@@ -175,10 +176,10 @@ return $default(_that.userId,_that.name);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int userId,  String name)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int userId,  String name,  bool confirmed)  $default,) {final _that = this;
 switch (_that) {
 case _Assignee():
-return $default(_that.userId,_that.name);case _:
+return $default(_that.userId,_that.name,_that.confirmed);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -195,10 +196,10 @@ return $default(_that.userId,_that.name);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int userId,  String name)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int userId,  String name,  bool confirmed)?  $default,) {final _that = this;
 switch (_that) {
 case _Assignee() when $default != null:
-return $default(_that.userId,_that.name);case _:
+return $default(_that.userId,_that.name,_that.confirmed);case _:
   return null;
 
 }
@@ -210,11 +211,12 @@ return $default(_that.userId,_that.name);case _:
 @JsonSerializable()
 
 class _Assignee implements Assignee {
-  const _Assignee({required this.userId, required this.name});
+  const _Assignee({required this.userId, required this.name, this.confirmed = false});
   factory _Assignee.fromJson(Map<String, dynamic> json) => _$AssigneeFromJson(json);
 
 @override final  int userId;
 @override final  String name;
+@override@JsonKey() final  bool confirmed;
 
 /// Create a copy of Assignee
 /// with the given fields replaced by the non-null parameter values.
@@ -229,16 +231,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Assignee&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.name, name) || other.name == name));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Assignee&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.name, name) || other.name == name)&&(identical(other.confirmed, confirmed) || other.confirmed == confirmed));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,userId,name);
+int get hashCode => Object.hash(runtimeType,userId,name,confirmed);
 
 @override
 String toString() {
-  return 'Assignee(userId: $userId, name: $name)';
+  return 'Assignee(userId: $userId, name: $name, confirmed: $confirmed)';
 }
 
 
@@ -249,7 +251,7 @@ abstract mixin class _$AssigneeCopyWith<$Res> implements $AssigneeCopyWith<$Res>
   factory _$AssigneeCopyWith(_Assignee value, $Res Function(_Assignee) _then) = __$AssigneeCopyWithImpl;
 @override @useResult
 $Res call({
- int userId, String name
+ int userId, String name, bool confirmed
 });
 
 
@@ -266,11 +268,12 @@ class __$AssigneeCopyWithImpl<$Res>
 
 /// Create a copy of Assignee
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? userId = null,Object? name = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? userId = null,Object? name = null,Object? confirmed = null,}) {
   return _then(_Assignee(
 userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,
+as String,confirmed: null == confirmed ? _self.confirmed : confirmed // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

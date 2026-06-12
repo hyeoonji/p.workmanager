@@ -14,7 +14,7 @@ import '../data/models/memo.dart';
 import 'memo_detail_page.dart';
 import 'write_memo_sheet.dart';
 
-const _red = Color(0xFFEF4444); // 대시보드 긴급 강조(빨강)
+const _red = AppColors.danger; // 디자인 danger(#D92D20)와 통일
 const _cardShadow = BoxShadow(
   color: Color(0x0F14387F), // rgba(20,56,127,0.06)
   blurRadius: 4,
@@ -72,8 +72,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         error: (_, _) => const Center(child: Text('불러오지 못했습니다.')),
         data: (memos) {
           final today = _dateOnly(DateTime.now());
+          // 미확인 긴급 = 내가 확인자인데 아직 확인 안 한 긴급 메모 (#4)
           final unreadUrgent = memos
-              .where((m) => m.isUrgent && m.readBy < m.totalReaders)
+              .where((m) => m.isUrgent && m.isConfirmer && !m.confirmedByMe)
               .toList();
           final todayCount =
               memos.where((m) => _sameDay(m.scheduledDate, today)).length;
@@ -107,10 +108,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _statRow(int urgent, int today, int mine) {
     return Row(
       children: [
-        _statCard('긴급', urgent,
+        _statCard('미확인 긴급', urgent,
             iconColor: AppColors.danger,
             countColor: AppColors.danger,
-            bg: const Color(0xFFFEE2E2),
+            bg: const Color(0xFFFEE4E2),
             icon: LucideIcons.bell,
             onTap: () => context.go('/all')),
         const SizedBox(width: 12),
@@ -170,7 +171,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textSub)),
+                      color: AppColors.textMuted)),
             ],
           ),
         ),
@@ -262,12 +263,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
           child: Row(
             children: [
-              const Icon(LucideIcons.calendar, size: 16, color: AppColors.skyBlue),
-              const SizedBox(width: 6),
+              const Icon(LucideIcons.calendar, size: 14, color: AppColors.skyBlue),
+              const SizedBox(width: 8),
               const Expanded(
                 child: Text('이번 주 일정',
                     style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textTitle)),
               ),
@@ -500,7 +501,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           fontWeight: FontWeight.w600,
                           color: AppColors.textTitle)),
                   const SizedBox(height: 2),
-                  Text('${m.author.name} · ${fmtTime(m.createdAt)}',
+                  Text('${m.author.name} · ${fmtDateTimeShort(m.createdAt)}',
                       style: const TextStyle(
                           fontSize: 12, color: AppColors.textMuted)),
                 ],
@@ -544,11 +545,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           : null,
       child: Row(
         children: [
-          Icon(icon, size: 16, color: iconColor),
-          const SizedBox(width: 6),
+          Icon(icon, size: 14, color: iconColor),
+          const SizedBox(width: 8),
           Text(title,
               style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textTitle)),
           if (trailing != null) ...[const Spacer(), trailing],

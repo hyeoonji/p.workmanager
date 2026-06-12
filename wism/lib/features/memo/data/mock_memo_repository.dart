@@ -3,7 +3,9 @@ import '../../auth/data/mock_users.dart';
 import '../domain/memo_draft.dart';
 import '../domain/memo_repository.dart';
 import 'models/assignee.dart';
+import 'models/attachment.dart';
 import 'models/comment.dart';
+import 'models/department.dart';
 import 'models/memo.dart';
 import 'models/memo_project.dart';
 import 'models/user_ref.dart';
@@ -188,6 +190,41 @@ class MockMemoRepository implements MemoRepository {
   }
 
   @override
+  Future<Attachment> uploadAttachment(
+      int memoId, String filePath, String fileName) async {
+    final i = _store._memos.indexWhere((m) => m.id == memoId);
+    final m = _store._memos[i];
+    final att = Attachment(
+      id: _store.newCommentId(),
+      memoId: memoId,
+      fileName: fileName,
+      size: 0,
+      url: '/attachments/0/download',
+    );
+    _store._memos[i] = m.copyWith(attachments: [...m.attachments, att]);
+    return att;
+  }
+
+  @override
+  Future<void> deleteAttachment(int attachmentId) async {
+    for (var i = 0; i < _store._memos.length; i++) {
+      final m = _store._memos[i];
+      if (m.attachments.any((a) => a.id == attachmentId)) {
+        _store._memos[i] = m.copyWith(
+          attachments:
+              m.attachments.where((a) => a.id != attachmentId).toList(),
+        );
+        break;
+      }
+    }
+  }
+
+  @override
+  Future<List<int>> downloadAttachment(int attachmentId) async {
+    throw UnsupportedError('Mock 모드에서는 첨부 다운로드를 지원하지 않습니다.');
+  }
+
+  @override
   Future<List<UserRef>> searchUsers(String query) async {
     await Future.delayed(const Duration(milliseconds: 120));
     final q = query.trim();
@@ -201,6 +238,21 @@ class MockMemoRepository implements MemoRepository {
               dept: u.dept,
               position: u.position,
             ))
+        .toList();
+  }
+
+  @override
+  Future<List<Department>> listDepartments() async {
+    await Future.delayed(const Duration(milliseconds: 80));
+    final map = <String, List<UserRef>>{};
+    for (final u in mockUsers) {
+      final d = u.dept;
+      if (d == null || d.isEmpty) continue;
+      (map[d] ??= []).add(UserRef(
+          id: u.id, name: u.name, dept: u.dept, position: u.position));
+    }
+    return map.entries
+        .map((e) => Department(name: e.key, members: e.value))
         .toList();
   }
 

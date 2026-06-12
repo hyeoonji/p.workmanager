@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/splash_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
+import '../features/onboarding/application/onboarding_providers.dart';
+import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/memo/presentation/home_screen.dart';
 import '../features/memo/presentation/all_memos_screen.dart';
 import '../features/memo/presentation/my_memos_screen.dart';
@@ -21,6 +23,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: notifier.redirect,
     routes: [
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
+      GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       StatefulShellRoute.indexedStack(
         builder: (_, _, navigationShell) =>
@@ -52,19 +55,28 @@ final routerProvider = Provider<GoRouter>((ref) {
 class _RouterNotifier extends ChangeNotifier {
   _RouterNotifier(this._ref) {
     _ref.listen(authControllerProvider, (_, _) => notifyListeners());
+    _ref.listen(onboardingSeenProvider, (_, _) => notifyListeners());
   }
   final Ref _ref;
 
   String? redirect(BuildContext context, GoRouterState state) {
+    final seen = _ref.read(onboardingSeenProvider);
     final status = _ref.read(authControllerProvider).status;
     final loc = state.matchedLocation;
+
+    // 1) 첫 실행 온보딩 미완료 → 무조건 온보딩
+    if (!seen) return loc == '/onboarding' ? null : '/onboarding';
+
+    // 2) 온보딩 완료 후 — 인증 상태로 분기 (게이트 화면엔 머무르지 않음)
+    final atGate =
+        loc == '/onboarding' || loc == '/splash' || loc == '/login';
     switch (status) {
       case AuthStatus.unknown:
         return loc == '/splash' ? null : '/splash';
       case AuthStatus.unauthenticated:
         return loc == '/login' ? null : '/login';
       case AuthStatus.authenticated:
-        return (loc == '/login' || loc == '/splash') ? '/home' : null;
+        return atGate ? '/home' : null;
     }
   }
 }

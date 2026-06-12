@@ -98,6 +98,16 @@ class _MemoListViewState extends ConsumerState<MemoListView> {
 
   @override
   Widget build(BuildContext context) {
+    // 탭 재탭 시 필터/정렬 초기화 (#6)
+    ref.listen(memoListResetProvider(widget.scope), (_, _) {
+      _searchController.clear();
+      setState(() {
+        _filter = '전체';
+        _query = '';
+        _sort = MemoSort.latest;
+      });
+    });
+
     final isUrgent = _filter == '긴급';
     final query = (
       scope: widget.scope,
@@ -197,7 +207,7 @@ class _MemoListViewState extends ConsumerState<MemoListView> {
 
   Widget _chips() {
     return SizedBox(
-      height: 36,
+      height: 32,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -209,22 +219,29 @@ class _MemoListViewState extends ConsumerState<MemoListView> {
           return GestureDetector(
             onTap: () => setState(() => _filter = f),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: selected ? AppColors.primary : AppColors.surface,
                 borderRadius: BorderRadius.circular(100),
-                border: Border.all(
-                  color: selected
-                      ? AppColors.primary
-                      : AppColors.primary.withValues(alpha: 0.15),
-                ),
+                border: selected
+                    ? null
+                    : Border.all(color: AppColors.border),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ]
+                    : null,
               ),
               child: Text(
                 f,
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                   color: selected ? Colors.white : AppColors.textSub,
                 ),
               ),

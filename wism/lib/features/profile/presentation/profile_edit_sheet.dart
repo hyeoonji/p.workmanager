@@ -14,7 +14,7 @@ Future<bool?> showProfileEditSheet(BuildContext context, AppUser user) {
     useRootNavigator: true,
     backgroundColor: AppColors.surface,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (_) => _ProfileEditSheet(user: user),
   );
@@ -82,7 +82,7 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
                 children: [
                   const Text('프로필 수정',
                       style:
-                          TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
@@ -111,17 +111,13 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.primary)),
                         ),
-                        const SizedBox(height: 8),
-                        const Text('사진은 회사 시스템에서 관리됩니다',
-                            style: TextStyle(
-                                fontSize: 12, color: AppColors.textMuted)),
                       ],
                     ),
                   ),
                   const SizedBox(height: 20),
                   _field('이름', _name),
-                  _field('직급', _position),
-                  _field('부서', _dept),
+                  _field('직급', _position, optional: true),
+                  _field('부서', _dept, optional: true),
                   _field('이메일', _email, keyboard: TextInputType.emailAddress),
                   _field('전화번호', _phone, keyboard: TextInputType.phone),
                 ],
@@ -144,7 +140,7 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
                           foregroundColor: AppColors.textSub,
                           side: const BorderSide(color: AppColors.border),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
+                              borderRadius: BorderRadius.circular(12)),
                           padding: const EdgeInsets.symmetric(vertical: 11),
                         ),
                         child: const Text('취소',
@@ -160,7 +156,7 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
                           backgroundColor: AppColors.primary,
                           disabledBackgroundColor: AppColors.buttonDisabled,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
+                              borderRadius: BorderRadius.circular(12)),
                           padding: const EdgeInsets.symmetric(vertical: 11),
                         ),
                         child: _saving
@@ -185,19 +181,31 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
   }
 
   Widget _field(String label, TextEditingController c,
-      {TextInputType? keyboard}) {
+      {TextInputType? keyboard, bool optional = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Text(label,
-                style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textTitle)),
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Text(label,
+                    style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textTitle)),
+                if (optional) ...[
+                  const SizedBox(width: 4),
+                  const Text('(선택)',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w400,
+                          color: AppColors.textMuted)),
+                ],
+              ],
+            ),
           ),
           TextField(
             controller: c,
@@ -220,7 +228,7 @@ class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
   }
 
   static OutlineInputBorder _border(Color c) => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: c),
       );
 }

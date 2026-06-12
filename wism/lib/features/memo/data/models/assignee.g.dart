@@ -9,9 +9,11 @@ part of 'assignee.dart';
 _Assignee _$AssigneeFromJson(Map<String, dynamic> json) => _Assignee(
   userId: (json['userId'] as num).toInt(),
   name: json['name'] as String,
+  confirmed: json['confirmed'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$AssigneeToJson(_Assignee instance) => <String, dynamic>{
   'userId': instance.userId,
   'name': instance.name,
+  'confirmed': instance.confirmed,
 };

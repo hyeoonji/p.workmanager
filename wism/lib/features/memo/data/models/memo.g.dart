@@ -31,11 +31,18 @@ _Memo _$MemoFromJson(Map<String, dynamic> json) => _Memo(
   commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
   bookmarked: json['bookmarked'] as bool? ?? false,
   isRead: json['isRead'] as bool? ?? false,
+  isConfirmer: json['isConfirmer'] as bool? ?? false,
+  confirmedByMe: json['confirmedByMe'] as bool? ?? false,
   comments:
       (json['comments'] as List<dynamic>?)
           ?.map((e) => Comment.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const <Comment>[],
+  attachments:
+      (json['attachments'] as List<dynamic>?)
+          ?.map((e) => Attachment.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <Attachment>[],
 );
 
 Map<String, dynamic> _$MemoToJson(_Memo instance) => <String, dynamic>{
@@ -55,5 +62,8 @@ Map<String, dynamic> _$MemoToJson(_Memo instance) => <String, dynamic>{
   'commentCount': instance.commentCount,
   'bookmarked': instance.bookmarked,
   'isRead': instance.isRead,
+  'isConfirmer': instance.isConfirmer,
+  'confirmedByMe': instance.confirmedByMe,
   'comments': instance.comments,
+  'attachments': instance.attachments,
 };

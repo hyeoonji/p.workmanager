@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/utils/formats.dart';
@@ -8,8 +12,10 @@ import '../../../shared/widgets/app_dialog.dart';
 import '../../../shared/widgets/memo_badges.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/memo_providers.dart';
+import '../data/models/attachment.dart';
 import '../data/models/comment.dart';
 import '../data/models/memo.dart';
+import 'widgets/attachment_widgets.dart';
 import 'write_memo_sheet.dart';
 
 class MemoDetailPage extends ConsumerStatefulWidget {
@@ -49,19 +55,13 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
     }
   }
 
-  Future<void> _editComment(Comment c) async {
-    final result = await showEditTextDialog(
-      context,
-      title: '댓글 수정',
-      initial: c.content,
-      hint: '댓글 내용',
-    );
-    if (result != null && result.isNotEmpty) {
-      await ref
-          .read(memoRepositoryProvider)
-          .updateComment(widget.memoId, c.id, result);
-      _refresh();
-    }
+  Future<void> _saveCommentEdit(Comment c, String text) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || trimmed == c.content) return;
+    await ref
+        .read(memoRepositoryProvider)
+        .updateComment(widget.memoId, c.id, trimmed);
+    _refresh();
   }
 
   Future<void> _deleteComment(Comment c) async {
@@ -94,6 +94,12 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
     if (mounted) Navigator.pop(context);
   }
 
+  /// 확인자가 '확인 완료'(읽음 기록 생성). 홈 미확인 긴급에서 사라짐.
+  Future<void> _confirm() async {
+    await ref.read(memoRepositoryProvider).markRead(widget.memoId);
+    _refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(memoDetailProvider(widget.memoId));
@@ -116,7 +122,7 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
                 position: PopupMenuPosition.under,
                 constraints: const BoxConstraints(minWidth: 120),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   side: const BorderSide(color: AppColors.cardBorder),
                 ),
                 onSelected: (v) async {
@@ -222,7 +228,7 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE8F1FB),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(8), // 일정 칩 = rBadge 8
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -274,6 +280,16 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
             ),
           ),
         ),
+        // 첨부파일
+        if (memo.attachments.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _attachmentsCard(memo),
+        ],
+        // 확인 현황 — 긴급 메모 + 확인자 있을 때만 (#4·#5)
+        if (memo.isUrgent && memo.assignees.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _confirmSection(memo, currentUserId),
+        ],
         const SizedBox(height: 16),
         Text('댓글${memo.comments.isNotEmpty ? ' (${memo.comments.length})' : ''}',
             style: const TextStyle(
@@ -302,120 +318,277 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
             ),
           )
         else
-          ...memo.comments.map((c) => Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: 14,
-                      backgroundColor: const Color(0xFFEBF3FB),
-                      child: Text(c.author.name.characters.first,
-                          style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary)),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(c.author.name,
-                                  style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600)),
-                              const SizedBox(width: 8),
-                              Text(fmtTime(c.createdAt),
-                                  style: const TextStyle(
-                                      fontSize: 12, color: AppColors.textMuted)),
-                              if (c.type == 'status') ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                      color: const Color(0xFFE6F4EA),
-                                      borderRadius: BorderRadius.circular(6)),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(LucideIcons.checkCircle,
-                                          size: 11, color: AppColors.catDecision),
-                                      SizedBox(width: 3),
-                                      Text('확인 완료',
-                                          style: TextStyle(
-                                              fontSize: 11,
-                                              color: AppColors.catDecision)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                              const Spacer(),
-                              if (c.author.id == currentUserId)
-                                SizedBox(
-                                  height: 22,
-                                  width: 28,
-                                  child: PopupMenuButton<String>(
-                                    padding: EdgeInsets.zero,
-                                    iconSize: 18,
-                                    color: AppColors.surface,
-                                    elevation: 8,
-                                    clipBehavior: Clip.antiAlias,
-                                    position: PopupMenuPosition.under,
-                                    constraints:
-                                        const BoxConstraints(minWidth: 120),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      side: const BorderSide(
-                                          color: AppColors.cardBorder),
-                                    ),
-                                    icon: const Icon(LucideIcons.moreVertical,
-                                        color: AppColors.textMuted),
-                                    onSelected: (v) => v == 'edit'
-                                        ? _editComment(c)
-                                        : _deleteComment(c),
-                                    itemBuilder: (_) => const [
-                                      PopupMenuItem(
-                                          value: 'edit',
-                                          height: 44,
-                                          padding: EdgeInsets.zero,
-                                          child: _MenuRow(
-                                              text: '수정', borderBottom: true)),
-                                      PopupMenuItem(
-                                          value: 'delete',
-                                          height: 44,
-                                          padding: EdgeInsets.zero,
-                                          child: _MenuRow(
-                                              text: '삭제',
-                                              color: AppColors.danger)),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(c.content,
-                              style: const TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.textBody,
-                                  height: 1.5)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+          ...memo.comments.map((c) => _CommentTile(
+                comment: c,
+                isOwn: c.author.id == currentUserId,
+                onSave: (text) => _saveCommentEdit(c, text),
+                onDelete: () => _deleteComment(c),
               )),
       ],
+    );
+  }
+
+  // ── 첨부파일 ──
+  Future<void> _openAttachment(Attachment a) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      SnackBar(content: Text('${a.fileName} 여는 중...'), duration: const Duration(seconds: 1)),
+    );
+    try {
+      final bytes = await ref
+          .read(memoRepositoryProvider)
+          .downloadAttachment(a.id);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/${a.fileName}');
+      await file.writeAsBytes(bytes);
+      final result = await OpenFilex.open(file.path);
+      if (result.type != ResultType.done && mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text('파일을 열 수 없습니다: ${result.message}')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        messenger.showSnackBar(
+            const SnackBar(content: Text('다운로드에 실패했습니다.')));
+      }
+    }
+  }
+
+  Widget _attachmentsCard(Memo memo) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.paperclip, size: 14, color: AppColors.textSub),
+              const SizedBox(width: 8),
+              Text('첨부파일 (${memo.attachments.length})',
+                  style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSub)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          for (int i = 0; i < memo.attachments.length; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            _attachmentRow(memo.attachments[i]),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _attachmentRow(Attachment a) {
+    return Material(
+      color: AppColors.background,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () => _openAttachment(a),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.cardBorder),
+          ),
+          child: Row(
+            children: [
+              AttachmentTypeIcon(a.kind),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(a.fileName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textTitle)),
+                    const SizedBox(height: 2),
+                    Text(a.sizeLabel,
+                        style: const TextStyle(
+                            fontSize: 12, color: AppColors.textMuted)),
+                  ],
+                ),
+              ),
+              const Icon(LucideIcons.download,
+                  size: 16, color: AppColors.textMuted),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── 확인 현황 (긴급 메모) ──
+  Widget _confirmSection(Memo memo, int? currentUserId) {
+    final isAuthor = memo.author.id == currentUserId;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: memo.isConfirmer
+                    ? _confirmButton(memo.confirmedByMe)
+                    : _notTargetBox(),
+              ),
+              const SizedBox(width: 12),
+              _countBox(memo.confirmedCount, memo.confirmerCount),
+            ],
+          ),
+        ),
+        if (isAuthor) ...[
+          const SizedBox(height: 12),
+          _confirmNames(memo),
+        ],
+      ],
+    );
+  }
+
+  Widget _confirmButton(bool confirmed) {
+    final bg = confirmed ? const Color(0xFFE6F4EA) : AppColors.primary;
+    final fg = confirmed ? AppColors.catDecision : Colors.white;
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: confirmed ? null : _confirm,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          height: 48,
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(LucideIcons.checkCircle, size: 16, color: fg),
+              const SizedBox(width: 8),
+              Text(confirmed ? '확인함' : '확인 완료',
+                  style: TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w600, color: fg)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _notTargetBox() {
+    return Container(
+      height: 48,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Text('확인 대상이 아닙니다',
+          style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+    );
+  }
+
+  Widget _countBox(int n, int m) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 62),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text.rich(
+            TextSpan(children: [
+              TextSpan(
+                  text: '$n',
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary)),
+              TextSpan(
+                  text: '/$m',
+                  style: const TextStyle(
+                      fontSize: 13, color: AppColors.textMuted)),
+            ]),
+          ),
+          const SizedBox(height: 2),
+          const Text('확인',
+              style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+        ],
+      ),
+    );
+  }
+
+  Widget _confirmNames(Memo memo) {
+    final done = memo.assignees.where((a) => a.confirmed).toList();
+    final pending = memo.assignees.where((a) => !a.confirmed).toList();
+    Widget chip(String name, {required bool ok}) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: ok ? const Color(0xFFE6F4EA) : AppColors.background,
+            borderRadius: BorderRadius.circular(6),
+            border: ok ? null : Border.all(color: AppColors.border),
+          ),
+          child: Text(name,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: ok ? AppColors.catDecision : AppColors.textSub)),
+        );
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (done.isNotEmpty) ...[
+            Text('확인 완료 (${done.length})',
+                style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.catDecision)),
+            const SizedBox(height: 8),
+            Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: done.map((a) => chip(a.name, ok: true)).toList()),
+          ],
+          if (done.isNotEmpty && pending.isNotEmpty)
+            const SizedBox(height: 12),
+          if (pending.isNotEmpty) ...[
+            Text('미확인 (${pending.length})',
+                style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textMuted)),
+            const SizedBox(height: 8),
+            Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: pending.map((a) => chip(a.name, ok: false)).toList()),
+          ],
+        ],
+      ),
     );
   }
 
@@ -511,6 +684,239 @@ class _MenuRow extends StatelessWidget {
             style: TextStyle(
                 fontSize: 14, fontWeight: FontWeight.w500, color: color)),
       );
+}
+
+/// 댓글 한 줄 — 본인 댓글은 ⋮ 메뉴(수정/삭제), 수정은 인라인 편집(#8).
+class _CommentTile extends StatefulWidget {
+  const _CommentTile({
+    required this.comment,
+    required this.isOwn,
+    required this.onSave,
+    required this.onDelete,
+  });
+  final Comment comment;
+  final bool isOwn;
+  final Future<void> Function(String text) onSave;
+  final VoidCallback onDelete;
+
+  @override
+  State<_CommentTile> createState() => _CommentTileState();
+}
+
+class _CommentTileState extends State<_CommentTile> {
+  late final TextEditingController _ctrl =
+      TextEditingController(text: widget.comment.content);
+  bool _editing = false;
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _startEdit() {
+    _ctrl.text = widget.comment.content;
+    setState(() => _editing = true);
+  }
+
+  void _cancel() {
+    _ctrl.text = widget.comment.content;
+    setState(() => _editing = false);
+  }
+
+  Future<void> _save() async {
+    final text = _ctrl.text.trim();
+    if (text.isEmpty) return;
+    setState(() => _editing = false);
+    await widget.onSave(text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = widget.comment;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: const Color(0xFFEBF3FB),
+            child: Text(c.author.name.characters.first,
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(c.author.name,
+                        style: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w600)),
+                    const SizedBox(width: 8),
+                    Text(fmtTime(c.createdAt),
+                        style: const TextStyle(
+                            fontSize: 12, color: AppColors.textMuted)),
+                    if (c.type == 'status') ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFE6F4EA),
+                            borderRadius: BorderRadius.circular(6)),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(LucideIcons.checkCircle,
+                                size: 11, color: AppColors.catDecision),
+                            SizedBox(width: 3),
+                            Text('확인 완료',
+                                style: TextStyle(
+                                    fontSize: 11, color: AppColors.catDecision)),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const Spacer(),
+                    if (widget.isOwn && !_editing)
+                      SizedBox(
+                        height: 22,
+                        width: 28,
+                        child: PopupMenuButton<String>(
+                          padding: EdgeInsets.zero,
+                          iconSize: 18,
+                          color: AppColors.surface,
+                          elevation: 8,
+                          clipBehavior: Clip.antiAlias,
+                          position: PopupMenuPosition.under,
+                          constraints: const BoxConstraints(minWidth: 120),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: const BorderSide(color: AppColors.cardBorder),
+                          ),
+                          icon: const Icon(LucideIcons.moreVertical,
+                              color: AppColors.textMuted),
+                          onSelected: (v) =>
+                              v == 'edit' ? _startEdit() : widget.onDelete(),
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(
+                                value: 'edit',
+                                height: 44,
+                                padding: EdgeInsets.zero,
+                                child: _MenuRow(text: '수정', borderBottom: true)),
+                            PopupMenuItem(
+                                value: 'delete',
+                                height: 44,
+                                padding: EdgeInsets.zero,
+                                child:
+                                    _MenuRow(text: '삭제', color: AppColors.danger)),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                if (_editing)
+                  _editor()
+                else
+                  Text(c.content,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textBody,
+                          height: 1.5)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 인라인 편집 영역 — textarea + 취소/저장 (디자인 CommentItem).
+  Widget _editor() {
+    OutlineInputBorder border(Color c, double w) => OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: c, width: w),
+        );
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, right: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _ctrl,
+            autofocus: true,
+            minLines: 2,
+            maxLines: 5,
+            onChanged: (_) => setState(() {}),
+            style: const TextStyle(fontSize: 14, color: AppColors.textTitle),
+            decoration: InputDecoration(
+              isDense: true,
+              filled: true,
+              fillColor: AppColors.background,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              enabledBorder: border(AppColors.border, 1),
+              focusedBorder: border(AppColors.primary, 1),
+              border: border(AppColors.border, 1),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              SizedBox(
+                height: 32,
+                child: OutlinedButton(
+                  onPressed: _cancel,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textSub,
+                    backgroundColor: AppColors.background,
+                    side: const BorderSide(color: AppColors.border),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    textStyle: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
+                  child: const Text('취소'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                height: 32,
+                child: FilledButton(
+                  onPressed: _ctrl.text.trim().isEmpty ? null : _save,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    disabledBackgroundColor: AppColors.buttonDisabled,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    textStyle: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  child: const Text('저장'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// 댓글 전송 버튼 — 36 원형, 활성 네이비 / 비활성 #D1D9E6.

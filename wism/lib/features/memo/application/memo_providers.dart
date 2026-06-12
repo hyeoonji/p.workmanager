@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart'; // StateProvider (Riverpod 3.x)
 
 import '../../../core/config/env.dart';
 import '../../../core/network/dio_client.dart';
 import '../../auth/application/auth_controller.dart';
 import '../data/memo_repository_impl.dart';
 import '../data/mock_memo_repository.dart';
+import '../data/models/department.dart';
 import '../data/models/memo.dart';
 import '../data/models/memo_project.dart';
 import '../data/models/user_ref.dart';
@@ -17,6 +19,10 @@ final memoRepositoryProvider = Provider<MemoRepository>((ref) {
   }
   return MemoRepositoryImpl(ref.read(dioProvider));
 });
+
+/// 탭(전체/내메모)을 누를 때마다 +1 → 해당 목록의 필터/정렬을 초기화하는 신호 (#6).
+final memoListResetProvider =
+    StateProvider.family<int, MemoScope>((ref, scope) => 0);
 
 /// 목록 조회 쿼리 (record → 구조적 동등성으로 family 키).
 typedef MemoQuery = ({
@@ -53,6 +59,11 @@ final userSearchProvider =
     FutureProvider.autoDispose.family<List<UserRef>, String>((ref, q) async {
   if (q.trim().isEmpty) return const [];
   return ref.watch(memoRepositoryProvider).searchUsers(q);
+});
+
+/// 부서 목록 (작성 시 '부서 단위 추가'). 한 번 로드 후 캐시.
+final departmentsProvider = FutureProvider<List<Department>>((ref) async {
+  return ref.watch(memoRepositoryProvider).listDepartments();
 });
 
 final projectSearchProvider =

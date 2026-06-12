@@ -194,7 +194,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   disabledBackgroundColor:
                                       const Color(0xFFA0AEC0),
                                   shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
+                                      borderRadius: BorderRadius.circular(12)),
                                 ),
                                 child: Padding(
                                   padding:
@@ -259,7 +259,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: focused ? AppColors.primary : AppColors.border,
           width: focused ? 1.5 : 1,

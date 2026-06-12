@@ -5,6 +5,9 @@ String fmtDate(DateTime d) => DateFormat('yyyy.MM.dd').format(d);
 String fmtShort(DateTime d) => DateFormat('MM-dd HH:mm').format(d);
 String fmtTime(DateTime d) => DateFormat('HH:mm').format(d);
 
+/// 목록·카드의 시간 표기 — "06.25 09:00" (날짜 + 24시).
+String fmtDateTimeShort(DateTime d) => DateFormat('MM.dd HH:mm').format(d);
+
 const _weekdayKo = ['일', '월', '화', '수', '목', '금', '토'];
 
 /// 일정 일시: "2026년 6월 8일(월) 오후 2:30"

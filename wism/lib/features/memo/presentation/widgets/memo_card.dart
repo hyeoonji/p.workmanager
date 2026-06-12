@@ -25,7 +25,7 @@ class MemoCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.cardBorder),
         boxShadow: const [
           BoxShadow(
@@ -38,7 +38,7 @@ class MemoCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -59,7 +59,7 @@ class MemoCard extends StatelessWidget {
                             ProjectBadge(memo.project!.name),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       Text(
                         memo.title,
                         maxLines: 2,
@@ -126,7 +126,7 @@ class MemoCard extends StatelessWidget {
                   text: memo.author.name,
                   style: const TextStyle(color: AppColors.textSub)),
               const TextSpan(text: '  ·  '),
-              TextSpan(text: fmtTime(memo.createdAt)),
+              TextSpan(text: fmtDateTimeShort(memo.createdAt)),
             ]),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -136,8 +136,8 @@ class MemoCard extends StatelessWidget {
         if (memo.commentCount > 0) ...[
           const SizedBox(width: 10),
           const Icon(LucideIcons.messageSquare,
-              size: 14, color: AppColors.textMuted),
-          const SizedBox(width: 3),
+              size: 13, color: AppColors.textMuted),
+          const SizedBox(width: 4),
           Text('${memo.commentCount}',
               style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
         ],

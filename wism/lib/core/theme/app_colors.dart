@@ -24,9 +24,9 @@ abstract class AppColors {
   static const iconInactive = Color(0xFFAAB4C8); // 비활성 탭·북마크 빈상태
 
   // ── 보더 / 구분선 ──
-  static const border = Color(0xFFE5E9EF); // 입력 기본
+  static const border = Color(0x1F14387F); // 입력 기본 = 디자인 border(navy 12%)
   static const borderFocus = primary; // 입력 포커스
-  static const cardBorder = Color(0x1414387F); // rgba(20,56,127,0.08)
+  static const cardBorder = Color(0x1414387F); // rgba(20,56,127,0.08) = borderSoft
   static const divider = Color(0xFFEEF1F5); // 카드 내부 구분선
 
   // ── 포인트 / 상태 ──
