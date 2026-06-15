@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/app_keys.dart';
 import '../core/theme/app_theme.dart';
 import 'router.dart';
 
@@ -14,6 +15,7 @@ class WismApp extends ConsumerWidget {
       title: 'WISM',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      scaffoldMessengerKey: scaffoldMessengerKey,
       routerConfig: router,
     );
   }

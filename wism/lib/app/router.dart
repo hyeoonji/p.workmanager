@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/app_keys.dart';
 import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/splash_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/onboarding/application/onboarding_providers.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/memo/presentation/home_screen.dart';
+import '../features/memo/presentation/memo_detail_page.dart';
 import '../features/memo/presentation/all_memos_screen.dart';
 import '../features/memo/presentation/my_memos_screen.dart';
 import '../features/memo/presentation/bookmarks_screen.dart';
@@ -18,11 +20,19 @@ import 'main_shell.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   final notifier = _RouterNotifier(ref);
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/splash',
     refreshListenable: notifier,
     redirect: notifier.redirect,
     routes: [
       GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
+      // 푸시 딥링크 진입점. 루트 네비게이터에 push되어 탭바 위로 덮인다.
+      GoRoute(
+        path: '/memo/:id',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (_, state) =>
+            MemoDetailPage(memoId: int.parse(state.pathParameters['id']!)),
+      ),
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       StatefulShellRoute.indexedStack(

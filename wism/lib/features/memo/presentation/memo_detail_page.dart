@@ -285,8 +285,10 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
           const SizedBox(height: 16),
           _attachmentsCard(memo),
         ],
-        // 확인 현황 — 긴급 메모 + 확인자 있을 때만 (#4·#5)
-        if (memo.isUrgent && memo.assignees.isNotEmpty) ...[
+        // 확인 현황 — 긴급 메모 + 확인자 있을 때, 그리고 내가 확인자이거나 작성자일 때만 (#4·#5)
+        if (memo.isUrgent &&
+            memo.assignees.isNotEmpty &&
+            (memo.isConfirmer || memo.author.id == currentUserId)) ...[
           const SizedBox(height: 16),
           _confirmSection(memo, currentUserId),
         ],
@@ -446,8 +448,11 @@ class _MemoDetailPageState extends ConsumerState<MemoDetailPage> {
                     ? _confirmButton(memo.confirmedByMe)
                     : _notTargetBox(),
               ),
-              const SizedBox(width: 12),
-              _countBox(memo.confirmedCount, memo.confirmerCount),
+              // 확인 인원 카운트(N/M)는 작성자에게만 노출.
+              if (isAuthor) ...[
+                const SizedBox(width: 12),
+                _countBox(memo.confirmedCount, memo.confirmerCount),
+              ],
             ],
           ),
         ),

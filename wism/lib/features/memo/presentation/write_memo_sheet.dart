@@ -478,8 +478,10 @@ class _WriteMemoDialogState extends ConsumerState<_WriteMemoDialog> {
                 final filtered = all
                     .where((u) => !_assignees.any((e) => e.id == u.id))
                     .toList()
-                  // 직급 순(높은 직급 먼저), 동급은 이름순
+                  // 부서 → 직급(높은 직급 먼저) → 이름 순
                   ..sort((a, b) {
+                    final d = (a.dept ?? '').compareTo(b.dept ?? '');
+                    if (d != 0) return d;
                     final r = _positionRank(a.position)
                         .compareTo(_positionRank(b.position));
                     return r != 0 ? r : a.name.compareTo(b.name);

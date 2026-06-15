@@ -139,13 +139,20 @@ class _MemoListViewState extends ConsumerState<MemoListView> {
                   ),
                 );
               }
+              // 전체 메모 탭에서는 북마크한 메모를 정렬과 무관하게 항상 최상단에 고정.
+              final items = widget.scope == MemoScope.all
+                  ? [
+                      ...list.where((m) => m.bookmarked),
+                      ...list.where((m) => !m.bookmarked),
+                    ]
+                  : list;
               return RefreshIndicator(
                 onRefresh: () async => ref.invalidate(memoListProvider),
                 child: ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-                  itemCount: list.length,
+                  itemCount: items.length,
                   itemBuilder: (_, i) {
-                    final m = list[i];
+                    final m = items[i];
                     return MemoCard(
                       memo: m,
                       onTap: () async {

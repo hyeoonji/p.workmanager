@@ -73,12 +73,17 @@ class _WismDatePickerState extends State<WismDatePicker> {
   Widget build(BuildContext context) {
     final v = widget.value;
     final hasDate = v != null;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // 트리거 필드
-        InkWell(
-          onTap: () => setState(() => _open = !_open),
+    return TapRegion(
+      // 캘린더가 열린 상태에서 바깥(다른 필드/빈 영역)을 누르면 닫는다.
+      onTapOutside: (_) {
+        if (_open) setState(() => _open = false);
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 트리거 필드
+          InkWell(
+            onTap: () => setState(() => _open = !_open),
           borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -113,7 +118,8 @@ class _WismDatePickerState extends State<WismDatePicker> {
           const SizedBox(height: 6),
           _popup(hasDate),
         ],
-      ],
+        ],
+      ),
     );
   }
 
