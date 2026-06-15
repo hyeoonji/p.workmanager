@@ -357,7 +357,8 @@ class _WriteMemoDialogState extends ConsumerState<_WriteMemoDialog> {
   // ── 사업(프로젝트): 인라인 검색 드롭다운 ──
   Widget _projectField() {
     final q = _projectQuery.text.trim();
-    final showPanel = _projectFocus.hasFocus && q.isNotEmpty;
+    // 포커스되면 입력 전에도 전체 목록을 미리보기로 보여준다.
+    final showPanel = _projectFocus.hasFocus;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -471,25 +472,24 @@ class _WriteMemoDialogState extends ConsumerState<_WriteMemoDialog> {
   }
 
   Widget _assigneePanel(String q) {
-    final userList = q.isEmpty
-        ? <UserRef>[]
-        : ref.watch(userSearchProvider(q)).maybeWhen(
-              data: (all) {
-                final filtered = all
-                    .where((u) => !_assignees.any((e) => e.id == u.id))
-                    .toList()
-                  // 부서 → 직급(높은 직급 먼저) → 이름 순
-                  ..sort((a, b) {
-                    final d = (a.dept ?? '').compareTo(b.dept ?? '');
-                    if (d != 0) return d;
-                    final r = _positionRank(a.position)
-                        .compareTo(_positionRank(b.position));
-                    return r != 0 ? r : a.name.compareTo(b.name);
-                  });
-                return filtered;
-              },
-              orElse: () => <UserRef>[],
-            );
+    // 포커스 시 입력 전에도 전체 사용자 목록을 미리보기로 노출(부서→직급→이름 순).
+    final userList = ref.watch(userSearchProvider(q)).maybeWhen(
+          data: (all) {
+            final filtered = all
+                .where((u) => !_assignees.any((e) => e.id == u.id))
+                .toList()
+              // 부서 → 직급(높은 직급 먼저) → 이름 순
+              ..sort((a, b) {
+                final d = (a.dept ?? '').compareTo(b.dept ?? '');
+                if (d != 0) return d;
+                final r = _positionRank(a.position)
+                    .compareTo(_positionRank(b.position));
+                return r != 0 ? r : a.name.compareTo(b.name);
+              });
+            return filtered;
+          },
+          orElse: () => <UserRef>[],
+        );
     if (userList.isEmpty) {
       return _panelBox(
         child: _panelEmpty(q.isEmpty ? '이름 또는 부서명을 입력하세요' : '검색 결과가 없습니다'),

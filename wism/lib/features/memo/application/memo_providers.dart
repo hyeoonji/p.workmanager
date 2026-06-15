@@ -57,7 +57,7 @@ final allMemosProvider = FutureProvider.autoDispose<List<Memo>>((ref) async {
 
 final userSearchProvider =
     FutureProvider.autoDispose.family<List<UserRef>, String>((ref, q) async {
-  if (q.trim().isEmpty) return const [];
+  // 빈 입력이면 전체 목록(미리보기)을 반환하도록 그대로 위임한다.
   return ref.watch(memoRepositoryProvider).searchUsers(q);
 });
 

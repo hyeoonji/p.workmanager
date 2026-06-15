@@ -228,9 +228,10 @@ class MockMemoRepository implements MemoRepository {
   Future<List<UserRef>> searchUsers(String query) async {
     await Future.delayed(const Duration(milliseconds: 120));
     final q = query.trim();
-    if (q.isEmpty) return const [];
+    // 빈 입력이면 전체 사용자(미리보기), 아니면 이름/부서명 매칭.
     return mockUsers
-        .where((u) => u.name.contains(q) || (u.dept?.contains(q) ?? false))
+        .where((u) =>
+            q.isEmpty || u.name.contains(q) || (u.dept?.contains(q) ?? false))
         .take(20)
         .map((u) => UserRef(
               id: u.id,
