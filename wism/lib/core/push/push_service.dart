@@ -58,11 +58,9 @@ class PushService {
           await _sendToken(t);
         });
 
-        // 포그라운드 수신: 트레이엔 안 뜨므로 직접 처리.
-        // → 알림 목록/뱃지 갱신 + 인앱 배너(스낵바) 표시.
+        // 포그라운드 수신: 알림 목록/뱃지만 조용히 갱신(스낵바 팝업은 띄우지 않음).
         FirebaseMessaging.onMessage.listen((m) {
           _refreshNotifications();
-          _showInAppBanner(m);
         });
 
         // 백그라운드 상태에서 트레이 알림을 탭해 앱으로 진입 → 메모로 이동.
@@ -87,41 +85,6 @@ class PushService {
   void _refreshNotifications() {
     _ref.invalidate(notificationsProvider);
     _ref.invalidate(unreadCountProvider);
-  }
-
-  /// 포그라운드에서 받은 알림을 화면 어디서든 보이는 스낵바로 띄운다.
-  /// '보기'를 누르면 해당 메모로 이동.
-  void _showInAppBanner(RemoteMessage m) {
-    final messenger = scaffoldMessengerKey.currentState;
-    if (messenger == null) return;
-    final n = m.notification;
-    final title = n?.title ?? '새 알림';
-    final body = n?.body;
-    final memoId = int.tryParse(m.data['memoId'] ?? '');
-
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(SnackBar(
-      behavior: SnackBarBehavior.floating,
-      duration: const Duration(seconds: 4),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
-          if (body != null && body.isNotEmpty)
-            Text(body, maxLines: 2, overflow: TextOverflow.ellipsis),
-        ],
-      ),
-      action: memoId != null
-          ? SnackBarAction(
-              label: '보기',
-              onPressed: () => _openMemo(memoId),
-            )
-          : null,
-    ));
   }
 
   void _openFromMessage(RemoteMessage m) {
